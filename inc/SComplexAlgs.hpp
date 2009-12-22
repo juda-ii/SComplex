@@ -1,3 +1,4 @@
+#include <boost/bind.hpp>
 
 template<typename SComplex>
 class SComplexAlgs{
@@ -6,17 +7,6 @@ class SComplexAlgs{
   typedef typename SComplex::CellNumerator CellNumerator;
   typedef typename SComplex::CellDimNumerator CellDimNumerator;
   typedef typename SComplex::CbdNumerator CbdNumerator;
-
-  static void test(SComplex& s){
-    CellNumerator cn(s);
-    while(cn.MoveNext()){
-      cout << cn.Current() << endl;
-      CbdNumerator cbdn(cn.Current());
-      while(cbdn.MoveNext()){
-        if(cbdn.Current().present()) cout << "   " << cbdn.Current() << endl;
-      }
-    }
-  }
 
   static void shave(SComplex& s){
     for(int d=embeddingDim-1;d>=0;--d){
@@ -51,18 +41,18 @@ class SComplexAlgs{
         // If we know that a coreduction may be there,
         // For instance when treating a non-compact set
         if(s.mayReduce()){
+			 typename SComplex::AllCellsIterators::iterator crpIt = std::find_if(s.allCellsIterators().begin(), s.allCellsIterators().end(),
+																							boost::bind(&Cell::getCofaceCompanion, _1, face));
+			 if (crpIt != s.allCellsIterators().end()) {
+				crpFound = *crpIt;
+			 }
           // Go through all cells and search for a coreduction pair
-          CellNumerator cn(s);
-          while(cn.MoveNext()){
             // if coface is a free coface,
             // then the search is successful.
             // We preserve the companion face
             // and quit the search
-            if(crpFound=cn.Current().getCofaceCompanion(face)){
-              break; // while loop
-            }
-          }
         }
+		  
         // If the search failed or when we even did not try to search
         // and we know that a cell of lowest dimension is always
         // a homology generator like in the case of a vertex in
@@ -128,11 +118,11 @@ class SComplexAlgs{
     Stopwatch sw;
     std::set<SourceGenerator_P> cells;
 
-    CellNumerator cn(A_SComplexCR());
 
-    while(cn.MoveNext()){
-      cells.insert((SourceGenerator_P)cn.Current());
-    }
+	 for (typename SComplex::AllCellsIterators::iterator it = A_SComplexCR().allCellsIterators().begin();
+			it != A_SComplexCR().allCellsIterators().end(); ++it) {
+      cells.insert((SourceGenerator_P)*it);
+	 }
 
     A_SComplexCR =CRef<SComplex>(new SComplex); // to free memory
     // -- MM std::cout << " rfccCR construction from " << cells.size() <<  " cells starting "  << std::endl;      // -- MM

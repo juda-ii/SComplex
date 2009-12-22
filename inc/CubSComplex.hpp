@@ -6,6 +6,9 @@
 #include "capd/bitSet/CubSetT.hpp"
 #include "capd/homologicalAlgebra/readCubCellSet.hpp"
 
+#include <boost/mpl/if.hpp>
+#include <iterator>
+
 typedef unsigned long int cluster;
 typedef BitSetT<BitmapT<cluster> > BitSet;
 typedef EuclBitSetT<BitSet,embeddingDim> EuclBitSet;
@@ -16,26 +19,58 @@ typedef BCubCelSet::BitCoordIterator BitCoordIterator;
 typedef BCubCelSet::BitIterator BitIterator;
 
 class CubSComplex : public BCubCelSet{
-  public:
-    CubSComplex():
-      BCubCelSet(),baseDimension(0)
-    {}
-    CubSComplex(const int* A_w, bool clear=false):
-      BCubCelSet(A_w,clear),baseDimension(0)
-    {}
-    CubSComplex(const char* fileName):baseDimension(0){
-      CRef<BCubCelSet> cubCellSetCR=readCubCellSet<BCubSet,BCubCelSet>(fileName);
-      cubCellSetCR().addEmptyCollar();
-      swap(*static_cast<BCubCelSet*>(this),cubCellSetCR());
+private:
 
-    }
-    using BCubCelSet::cardinality;
+  template<typename NumeratorT, bool isConst>
+  class IteratorProvider;
+  class CellNumerator;
+  
+public:
 
-    class CellNumerator;
-    class CellDimNumerator;
-    class CbdNumerator;
+  class CellDimNumerator;
+  class CbdNumerator;
 
-    class Cell : public BitCoordIterator{
+  class Cell;
+
+
+  typedef IteratorProvider<CellNumerator, false> AllCellsIterators;
+  typedef IteratorProvider<CellNumerator, true> AllCellsConstIterators;
+  
+  typedef int Dim;
+  
+  CubSComplex();
+  CubSComplex(const int* A_w, bool clear=false);
+  CubSComplex(const char* fileName);
+
+  using BCubCelSet::cardinality;
+
+  AllCellsIterators allCellsIterators();
+  AllCellsConstIterators allCellsIterators() const;
+  
+  
+  // So far this code reduces to finding a vertex
+  Cell getBaseCell();
+  
+  // This is always false for standard cubical homology
+  bool mayReduce();
+
+  // This is always true for standard cubical homology
+    // as long as there remains a nonreduced vertex
+    // A special code will have to be written for higher dimensions
+  bool isExtractable();
+
+    void storeGenerator(const Cell& c);
+
+    // This will be needed only for homology maps
+  void storeReductionPair(const Cell& coface, const Cell& face);
+  
+  protected:
+    int baseDimension;
+    std::vector<Cell> collectedHomGenerators;
+  
+};
+
+    class CubSComplex::Cell : public BitCoordIterator{
       friend class CellNumerator;
       friend class CellDimNumerator;
       typedef BitCoordIterator::WordIterator WordIterator;
@@ -50,6 +85,10 @@ class CubSComplex : public BCubCelSet{
             return this->wIt < this->getBitmap().getBitmapEnd();
         }
 
+		void toEnd() {
+		  this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
+		}
+		
         Cell& operator=(bool b){
           if(!b){
             this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
@@ -60,29 +99,9 @@ class CubSComplex : public BCubCelSet{
           return *this;
         }
 
-        operator string() const{
-          ostringstream o;
-          o << *this;
-          return o.str();
-        }
-
         bool getCofaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
           return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeCoFace(*this,companion);
         }
-
-/*      This general code seems to be slower
-        bool getFaceCompanion(Cell& companion) {
-          CbdNumerator cbdn(*this);
-          int cnt=0;
-          while(cbdn.MoveNext()){
-            if(cbdn.Current().present()){
-              if(++cnt>1) return false;
-              companion=cbdn.Current();
-            }
-          }
-          return (cnt ? true : false);
-        }
-*/
 
         bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
           return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
@@ -100,26 +119,115 @@ class CubSComplex : public BCubCelSet{
         }
     };
 
-    class CellNumerator{
-      public:
-        CellNumerator(CubSComplex& s):cCell(s){
-          --cCell;
-        }
+  template<typename NumeratorT, bool isConst>
+  class CubSComplex::IteratorProvider {
+  public:
+	 typedef NumeratorT Numerator;
 
+  private:
+	 template<typename ValueT>
+	 class IteratorFromNumeratorAdapter;
+
+	 typedef typename boost::mpl::if_c<isConst, const typename Numerator::value_type, typename Numerator::value_type>::type ValueT;
+  public:
+	 
+	 typedef IteratorFromNumeratorAdapter<ValueT>  iterator;
+
+	 IteratorProvider(const Numerator& numerator): first(numerator), last(findLast(numerator)) {}
+	 
+	 iterator begin() { return iterator(first); }
+	 iterator end() { return iterator(last); }
+
+	 private:
+
+	 static Numerator findLast(Numerator numerator) {
+		numerator.toEnd();
+		return numerator;
+	 }
+	 
+	 const Numerator first, last;
+  };
+
+
+template<typename NumeratorT, bool isConst>
+template<typename ValueT>
+class CubSComplex::IteratorProvider<NumeratorT, isConst>::IteratorFromNumeratorAdapter: public std::iterator<forward_iterator_tag, ValueT> {
+
+  typedef std::iterator<forward_iterator_tag, ValueT> Base;
+  typedef typename IteratorProvider<NumeratorT, isConst>::Numerator Numerator;
+  Numerator currentNumerator;
+
+
+  
+public:
+
+	 explicit IteratorFromNumeratorAdapter(const Numerator& numerator): currentNumerator(numerator) {}
+
+	 IteratorFromNumeratorAdapter& operator++() {
+		currentNumerator.MoveNext();
+		return *this;
+	 }
+
+	 IteratorFromNumeratorAdapter operator++(int) {
+		IteratorFromNumeratorAdapter tmp(*this);
+		currentNumerator.MoveNext();
+		return tmp;
+	 }
+
+  typename Base::reference operator*() {
+		return currentNumerator.Current();
+	 }
+
+  typename Base::pointer operator->()  {
+		return &currentNumerator.Current();
+	 }
+
+	 bool operator==(const IteratorFromNumeratorAdapter& o) const {
+		return this->currentNumerator == o.currentNumerator;
+	 }
+
+	 bool operator!=(const IteratorFromNumeratorAdapter& o) const {
+		return !(*this == o);
+	 }
+
+  };
+
+
+class CubSComplex::CellNumerator{
+  
+public:
+  typedef Cell value_type;
+  
+  CellNumerator(const CubSComplex& s):cCell(s){
+	 --cCell;
+  }
+  
         bool MoveNext(){
           ++cCell;
           cCell.moveToFirstPixel();
           return cCell.wIt < cCell.getBitmap().getBitmapEnd();
         }
+
         Cell& Current(){
           return cCell;
         }
-      protected:
+
+  void toEnd() {
+	 cCell.toEnd();
+  }
+  
+  bool operator==(const CellNumerator& o) const {
+	 return this->cCell.wIt == o.cCell.wIt;
+  }
+
+protected:
         Cell cCell;
     };
 
-    class CellDimNumerator{
-      public:
+    class CubSComplex::CellDimNumerator{
+	 public:
+		typedef Cell value_type;
+		
         CellDimNumerator(CubSComplex& s,int d):cCell(s),dim(d){
           --cCell;
         }
@@ -140,8 +248,10 @@ class CubSComplex : public BCubCelSet{
         int dim;
     };
 
-    class CbdNumerator{
-      public:
+    class CubSComplex::CbdNumerator{
+	 public:
+		typedef Cell value_type;
+		
         CbdNumerator(const Cell& c):cCell(c),center(c),i(0),downDir(true){
           cCell=false;
         }
@@ -149,20 +259,18 @@ class CubSComplex : public BCubCelSet{
           while(i < cCell.embDim()){
             // process only directions in which cell is degenerate
             if(!downDir || !center.odd(i)){
+				  cCell=center;
               // First check the bottom face
               if(downDir){
-                cCell=center;
                 cCell.decInDir(i);
                 downDir=false;
-                return true;
               // and now go to the top face
               }else{
-                cCell=center;
                 cCell.incInDir(i);;
                 downDir=true;
                 ++i;
-                return true;
               }
+				  return true;
             }else{
               ++i;
             }
@@ -179,49 +287,56 @@ class CubSComplex : public BCubCelSet{
         bool downDir;
     };
 
+  
+inline CubSComplex::CubSComplex():
+  BCubCelSet(),baseDimension(0)
+{}
 
-    // So far this code reduces to finding a vertex
-    Cell getBaseCell(){
-      CellNumerator cn(*this);
-      while(cn.MoveNext()){
-        if(!cn.Current().isValid() || cn.Current().ownDim()==baseDimension ) break;
-      }
-      return cn.Current();
-    }
+inline CubSComplex::CubSComplex(const int* A_w, bool clear):
+  BCubCelSet(A_w,clear),baseDimension(0)
+{}
 
-    // This is always false for standard cubical homology
-    bool mayReduce(){
-      return false;
-    }
+inline CubSComplex::CubSComplex(const char* fileName):baseDimension(0){
+  CRef<BCubCelSet> cubCellSetCR=readCubCellSet<BCubSet,BCubCelSet>(fileName);
+  cubCellSetCR().addEmptyCollar();
+  swap(*static_cast<BCubCelSet*>(this),cubCellSetCR());
 
-    // This is always true for standard cubical homology
-    // as long as there remains a nonreduced vertex
-    // A special code will have to be written for higher dimensions
-    bool isExtractable(){
-      return baseDimension==0;
-    }
+}
 
-    void storeGenerator(const Cell& c){
-      collectedHomGenerators.push_back(c);
-    }
+  
+// So far this code reduces to finding a vertex
+inline CubSComplex::Cell CubSComplex::getBaseCell(){
+  CellNumerator cn(*this);
+  while(cn.MoveNext()){
+	 if(!cn.Current().isValid() || cn.Current().ownDim()==baseDimension ) break;
+  }
+  return cn.Current();
+}
 
-    // This will be needed only for homology maps
-    void storeReductionPair(const Cell& coface, const Cell& face){
-    }
+// This is always false for standard cubical homology
+inline bool CubSComplex::mayReduce(){
+  return false;
+}
 
-/*
-    operator string(){
-      ostringstream o;
-      CellNumerator cn(*this);
-      Cell cell;
-      while((cell=cn.get()).isValid()){
-        o << "---" << cell << endl;
-      }
-      return o.str();
-    }
-*/
+// This is always true for standard cubical homology
+// as long as there remains a nonreduced vertex
+// A special code will have to be written for higher dimensions
+inline bool CubSComplex::isExtractable(){
+  return baseDimension==0;
+}
 
-  protected:
-    int baseDimension;
-    std::vector<Cell> collectedHomGenerators;
-};
+inline void CubSComplex::storeGenerator(const CubSComplex::Cell& c){
+  collectedHomGenerators.push_back(c);
+}
+
+// This will be needed only for homology maps
+inline void CubSComplex::storeReductionPair(const CubSComplex::Cell& coface, const CubSComplex::Cell& face){
+}
+
+inline CubSComplex::AllCellsIterators CubSComplex::allCellsIterators() {
+  return AllCellsIterators(CellNumerator(*this));
+}
+
+inline CubSComplex::AllCellsConstIterators CubSComplex::allCellsIterators() const {
+  return AllCellsConstIterators(CellNumerator(*this));
+}

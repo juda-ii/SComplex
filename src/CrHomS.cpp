@@ -16,8 +16,8 @@ using namespace std;
 #include "capd/homologicalAlgebra/cubSetFunctors.hpp"
 #include "capd/homologicalAlgebra/ReducibleFreeChainComplex.hpp"
 
-#include "CubSComplex.cpp"
-#include "SComplexAlgs.hpp"
+#include <CubSComplex.hpp>
+#include <SComplexAlgs.hpp>
 
 typedef ElementaryCell ElementaryCellType;
 typedef int ScalarType;

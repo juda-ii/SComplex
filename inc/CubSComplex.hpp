@@ -35,7 +35,10 @@ public:
 
   typedef IteratorProvider<CellNumerator, false> AllCellsIterators;
   typedef IteratorProvider<CellNumerator, true> AllCellsConstIterators;
-  
+
+  typedef IteratorProvider<CellDimNumerator, false> DimCellsIterators;
+  typedef IteratorProvider<CellDimNumerator, true> DimCellsConstIterators;
+
   typedef int Dim;
   
   CubSComplex();
@@ -46,7 +49,10 @@ public:
 
   AllCellsIterators allCellsIterators();
   AllCellsConstIterators allCellsIterators() const;
-  
+
+  DimCellsIterators dimCellsIterators();
+  DimCellsConstIterators dimCellsIterators() const;
+
   
   // So far this code reduces to finding a vertex
   Cell getBaseCell();
@@ -240,7 +246,11 @@ protected:
             if(cCell.ownDim()==dim) return true;
           }
         }
-        Cell& Current(){
+		void toEnd() {
+		  cCell.toEnd();
+		}
+		
+		Cell& Current(){
           return cCell;
         }
       protected:
@@ -339,4 +349,12 @@ inline CubSComplex::AllCellsIterators CubSComplex::allCellsIterators() {
 
 inline CubSComplex::AllCellsConstIterators CubSComplex::allCellsIterators() const {
   return AllCellsConstIterators(CellNumerator(*this));
+}
+
+inline CubSComplex::DimCellsIterators CubSComplex::dimCellsIterators() {
+  return DimCellsIterators(CellDimNumerator(*this));
+}
+
+inline CubSComplex::DimCellsConstIterators CubSComplex::dimCellsIterators() const {
+  return DimCellsConstIterators(CellDimNumerator(*this));
 }

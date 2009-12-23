@@ -5,7 +5,7 @@ class SComplexAlgs{
   public:
   typedef typename SComplex::Cell Cell;
   
-  static void shave(SComplex& s){
+  void shave(SComplex& s){
     for(int d=embeddingDim-1;d>=0;--d){
 		typedef typename SComplex::Iterators::DimCells::iterator DimIt;
 
@@ -21,7 +21,7 @@ class SComplexAlgs{
     }
   }
 
-  static int coreduce(SComplex& s){
+  int coreduce(SComplex& s){
     Cell coface,face,sourceFace;
     // A queue for coreduction candidates
     std::deque<Cell> cellsToProcess;
@@ -112,7 +112,7 @@ class SComplexAlgs{
 // -------------------------------------------------------------------------------------- //
 
   template<typename FCComplex_P, typename SourceGenerator_P>
-  static CRef<FCComplex_P> ReducibleFreeChainComplexOverZFromSComplex(CRef<SComplex> A_SComplexCR){
+  CRef<FCComplex_P> ReducibleFreeChainComplexOverZFromSComplex(CRef<SComplex> A_SComplexCR){
 
     typedef typename FCComplex_P::GeneratorType GeneratorType;
 

@@ -45,17 +45,20 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
 
 
   Stopwatch swComp,swRed;
-  SComplexAlgs<CubSComplex>::shave(SComplexCR());
+  SComplexAlgs<CubSComplex> algorithm;
+  
+  algorithm.shave(SComplexCR());
   cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
   get<1>(result) = SComplexCR().cardinality();
   
   Stopwatch swCoRed;
-  SComplexAlgs<CubSComplex>::coreduce(SComplexCR());
+
+  algorithm.coreduce(SComplexCR());
   cout << " --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed <<  endl;
   get<2>(result) = SComplexCR().cardinality();
   
   CRef<ReducibleFreeChainComplexType> RFCComplexCR=
-     SComplexAlgs<CubSComplex>::ReducibleFreeChainComplexOverZFromSComplex<ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR);
+     algorithm.ReducibleFreeChainComplexOverZFromSComplex<ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR);
   cout << " --- RFCC constructed  " << endl;
 
   CRef<HomologySignature> homSignCR=HomAlgFunctors<FreeModuleType>::homSignViaAR_Random(RFCComplexCR);

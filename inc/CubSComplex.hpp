@@ -50,8 +50,8 @@ public:
   AllCellsIterators allCellsIterators();
   AllCellsConstIterators allCellsIterators() const;
 
-  DimCellsIterators dimCellsIterators();
-  DimCellsConstIterators dimCellsIterators() const;
+  DimCellsIterators dimCellsIterators(const Dim& dim);
+  DimCellsConstIterators dimCellsIterators(const Dim& dim) const;
 
   
   // So far this code reduces to finding a vertex
@@ -141,8 +141,13 @@ public:
 
 	 IteratorProvider(const Numerator& numerator): first(numerator), last(findLast(numerator)) {}
 	 
-	 iterator begin() { return iterator(first); }
-	 iterator end() { return iterator(last); }
+	 iterator begin() const {
+		Numerator tmp = first;
+		tmp.MoveNext();
+		return iterator(tmp);
+	 }
+
+	 iterator end() const { return iterator(last); }
 
 	 private:
 
@@ -167,7 +172,8 @@ class CubSComplex::IteratorProvider<NumeratorT, isConst>::IteratorFromNumeratorA
   
 public:
 
-	 explicit IteratorFromNumeratorAdapter(const Numerator& numerator): currentNumerator(numerator) {}
+  explicit IteratorFromNumeratorAdapter(const Numerator& numerator): currentNumerator(numerator) {
+  }
 
 	 IteratorFromNumeratorAdapter& operator++() {
 		currentNumerator.MoveNext();
@@ -234,11 +240,16 @@ protected:
 	 public:
 		typedef Cell value_type;
 		
-        CellDimNumerator(CubSComplex& s,int d):cCell(s),dim(d){
+        CellDimNumerator(const CubSComplex& s,int d):cCell(s),dim(d){
           --cCell;
         }
 
-        bool MoveNext(){
+
+		bool operator==(const CellDimNumerator& o) const {
+		  return this->cCell.wIt == o.cCell.wIt;
+		}
+
+		bool MoveNext(){
           for(;;){
             ++cCell;
             cCell.moveToFirstPixel();
@@ -351,10 +362,10 @@ inline CubSComplex::AllCellsConstIterators CubSComplex::allCellsIterators() cons
   return AllCellsConstIterators(CellNumerator(*this));
 }
 
-inline CubSComplex::DimCellsIterators CubSComplex::dimCellsIterators() {
-  return DimCellsIterators(CellDimNumerator(*this));
+inline CubSComplex::DimCellsIterators CubSComplex::dimCellsIterators(const Dim& dim) {
+  return DimCellsIterators(CellDimNumerator(*this, dim));
 }
 
-inline CubSComplex::DimCellsConstIterators CubSComplex::dimCellsIterators() const {
-  return DimCellsConstIterators(CellDimNumerator(*this));
+inline CubSComplex::DimCellsConstIterators CubSComplex::dimCellsIterators(const Dim& dim) const {
+  return DimCellsConstIterators(CellDimNumerator(*this, dim));
 }

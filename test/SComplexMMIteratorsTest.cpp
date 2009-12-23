@@ -25,8 +25,22 @@ BOOST_AUTO_TEST_CASE(iterators_AllCells_init_test) {
 	 CubSComplex s("test/input_1.bmd");
 
 	 BOOST_CHECK(s.allCellsIterators().begin() != s.allCellsIterators().end());
+	 BOOST_CHECK(s.allCellsIterators().begin() == s.allCellsIterators().begin());
+	 BOOST_CHECK(s.allCellsIterators().end() == s.allCellsIterators().end());
 	 BOOST_CHECK( ((const CubSComplex&)s).allCellsIterators().begin() != ((const CubSComplex&)s).allCellsIterators().end());
+	 BOOST_CHECK( ((const CubSComplex&)s).allCellsIterators().begin() == ((const CubSComplex&)s).allCellsIterators().begin());
+	 BOOST_CHECK( ((const CubSComplex&)s).allCellsIterators().end() == ((const CubSComplex&)s).allCellsIterators().end());
+}
 
+BOOST_AUTO_TEST_CASE(iterators_DimCells_init_test) {
+	 CubSComplex s("test/input_1.bmd");
+
+	 BOOST_CHECK(s.dimCellsIterators(0).begin() != s.dimCellsIterators(0).end());
+	 BOOST_CHECK(s.dimCellsIterators(0).begin() == s.dimCellsIterators(0).begin());
+	 BOOST_CHECK(s.dimCellsIterators(0).end() == s.dimCellsIterators(0).end());
+	 BOOST_CHECK( ((const CubSComplex&)s).dimCellsIterators(0).begin() != ((const CubSComplex&)s).dimCellsIterators(0).end());
+	 BOOST_CHECK( ((const CubSComplex&)s).dimCellsIterators(0).begin() == ((const CubSComplex&)s).dimCellsIterators(0).begin());
+	 BOOST_CHECK( ((const CubSComplex&)s).dimCellsIterators(0).end() == ((const CubSComplex&)s).dimCellsIterators(0).end());
 }
 
 BOOST_AUTO_TEST_CASE(iterators_AllCells_forEach_test) {
@@ -46,6 +60,7 @@ BOOST_AUTO_TEST_CASE(iterators_AllCells_forEach_test) {
 
 	 
 	 CubSComplex::AllCellsIterators allCells = s.allCellsIterators();
+
 	 std::for_each(allCells.begin(), allCells.end(), boost::bind(&CubSComplex::Cell::remove, _1));
 	 BOOST_CHECK_EQUAL(s.cardinality(), 0);
 

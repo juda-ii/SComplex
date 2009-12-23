@@ -4,18 +4,20 @@ template<typename SComplex>
 class SComplexAlgs{
   public:
   typedef typename SComplex::Cell Cell;
-  typedef typename SComplex::CellNumerator CellNumerator;
-  typedef typename SComplex::CellDimNumerator CellDimNumerator;
   typedef typename SComplex::CbdNumerator CbdNumerator;
-
+  typedef typename SComplex::CellDimNumerator CellDimNumerator;
+  
   static void shave(SComplex& s){
     for(int d=embeddingDim-1;d>=0;--d){
+		typedef typename SComplex::DimCellsIterators::iterator DimIt;
+
       Cell face;
-      CellDimNumerator cn(s,d);
-      while(cn.MoveNext()){
-        if(cn.Current().getFaceCompanion(face)){
+		for (DimIt it = s.dimCellsIterators(d).begin(),
+				 end = s.dimCellsIterators(d).end();
+			  it != end; ++it) {
+		  if(it->getFaceCompanion(face)){
           face.remove();
-          cn.Current().remove();
+          it->remove();
         }
       }
     }
@@ -119,8 +121,9 @@ class SComplexAlgs{
     std::set<SourceGenerator_P> cells;
 
 
-	 for (typename SComplex::AllCellsIterators::iterator it = A_SComplexCR().allCellsIterators().begin();
-			it != A_SComplexCR().allCellsIterators().end(); ++it) {
+	 for (typename SComplex::AllCellsIterators::iterator it = A_SComplexCR().allCellsIterators().begin(),
+			  end = A_SComplexCR().allCellsIterators().end();
+			it != end; ++it) {
       cells.insert((SourceGenerator_P)*it);
 	 }
 

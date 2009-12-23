@@ -25,14 +25,12 @@ private:
   class IteratorProvider;
   class CellNumerator;
   class CellDimNumerator;
-
+  class CbdNumerator;
+  
   template<bool isConst>
   class IteratorsImpl;
   
 public:
-
-
-  class CbdNumerator;
 
   class Cell;
 
@@ -275,7 +273,16 @@ protected:
         CbdNumerator(const Cell& c):cCell(c),center(c),i(0),downDir(true){
           cCell=false;
         }
-        bool MoveNext(){
+
+		void toEnd() {
+		  cCell.toEnd();
+		}
+		
+		bool operator==(const CbdNumerator& o) const {
+		  return this->cCell.wIt == o.cCell.wIt;
+		}
+
+		bool MoveNext(){
           while(i < cCell.embDim()){
             // process only directions in which cell is degenerate
             if(!downDir || !center.odd(i)){
@@ -295,7 +302,8 @@ protected:
               ++i;
             }
           }
-          cCell=false;
+			 cCell=false;
+			 cCell.toEnd();
           return false;
         }
         Cell& Current(){
@@ -313,15 +321,15 @@ class CubSComplex::IteratorsImpl {
   typedef typename boost::mpl::if_c<isConst, const CubSComplex&, CubSComplex&>::type SComplexRef;
 public:
   typedef CubSComplex::IteratorProvider<CellNumerator, isConst> AllCells;
-  typedef CubSComplex::IteratorProvider<CubSComplex::CellDimNumerator, isConst> DimCells;
-  typedef CubSComplex::IteratorProvider<CubSComplex::CbdNumerator, isConst> CbdCells;
+  typedef CubSComplex::IteratorProvider<CellDimNumerator, isConst> DimCells;
+  typedef CubSComplex::IteratorProvider<CbdNumerator, isConst> CbdCells;
 
 
   IteratorsImpl(SComplexRef _scomplex): scomplex(_scomplex) {}
   
-  AllCells allCells();
-  DimCells dimCells(const Dim& dim);
-  //  CbdCells cbd(const Cell);
+  AllCells allCells() const;
+  DimCells dimCells(const Dim& dim) const;
+  CbdCells cbdCells(const Cell& cell) const;
   
 private:
   SComplexRef scomplex;
@@ -383,11 +391,16 @@ inline CubSComplex::ConstIterators CubSComplex::iterators() const {
 }
 
 template<bool isConst>
-inline typename CubSComplex::IteratorsImpl<isConst>::AllCells CubSComplex::IteratorsImpl<isConst>::allCells() {
-  return AllCells(CubSComplex::CellNumerator(scomplex));
+inline typename CubSComplex::IteratorsImpl<isConst>::AllCells CubSComplex::IteratorsImpl<isConst>::allCells() const {
+  return AllCells(CellNumerator(scomplex));
 }
 
 template<bool isConst>
-inline typename CubSComplex::IteratorsImpl<isConst>::DimCells CubSComplex::IteratorsImpl<isConst>::dimCells(const Dim& dim) {
+inline typename CubSComplex::IteratorsImpl<isConst>::DimCells CubSComplex::IteratorsImpl<isConst>::dimCells(const Dim& dim) const {
   return DimCells(CellDimNumerator(scomplex, dim));
+}
+
+template<bool isConst>
+inline typename CubSComplex::IteratorsImpl<isConst>::CbdCells CubSComplex::IteratorsImpl<isConst>::cbdCells(const Cell& cell) const {
+  return CbdCells(CbdNumerator(cell));
 }

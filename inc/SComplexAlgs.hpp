@@ -4,7 +4,6 @@ template<typename SComplex>
 class SComplexAlgs{
   public:
   typedef typename SComplex::Cell Cell;
-  typedef typename SComplex::CbdNumerator CbdNumerator;
   
   static void shave(SComplex& s){
     for(int d=embeddingDim-1;d>=0;--d){
@@ -101,9 +100,9 @@ class SComplexAlgs{
       }
       // Finally, put all present cofaces of the source face
       // into the queue
-      CbdNumerator cbdn(sourceFace);
-      while(cbdn.MoveNext()){
-        if(cbdn.Current().present()) cellsToProcess.push_back(cbdn.Current());
+		for (typename SComplex::Iterators::CbdCells::iterator cbdn = s.iterators().cbdCells(sourceFace).begin(),
+				 end = s.iterators().cbdCells(sourceFace).end(); cbdn != end; ++cbdn) {
+        if(cbdn->present()) cellsToProcess.push_back(*cbdn);
       }
     }
     return cnt; // the number of cells removed

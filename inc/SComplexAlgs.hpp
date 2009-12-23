@@ -5,15 +5,14 @@ class SComplexAlgs{
   public:
   typedef typename SComplex::Cell Cell;
   typedef typename SComplex::CbdNumerator CbdNumerator;
-  typedef typename SComplex::CellDimNumerator CellDimNumerator;
   
   static void shave(SComplex& s){
     for(int d=embeddingDim-1;d>=0;--d){
-		typedef typename SComplex::DimCellsIterators::iterator DimIt;
+		typedef typename SComplex::Iterators::DimCells::iterator DimIt;
 
       Cell face;
-		for (DimIt it = s.dimCellsIterators(d).begin(),
-				 end = s.dimCellsIterators(d).end();
+		for (DimIt it = s.iterators().dimCells(d).begin(),
+				 end = s.iterators().dimCells(d).end();
 			  it != end; ++it) {
 		  if(it->getFaceCompanion(face)){
           face.remove();
@@ -43,9 +42,10 @@ class SComplexAlgs{
         // If we know that a coreduction may be there,
         // For instance when treating a non-compact set
         if(s.mayReduce()){
-			 typename SComplex::AllCellsIterators::iterator crpIt = std::find_if(s.allCellsIterators().begin(), s.allCellsIterators().end(),
-																							boost::bind(&Cell::getCofaceCompanion, _1, face));
-			 if (crpIt != s.allCellsIterators().end()) {
+			 typename SComplex::Iterators::AllCells::iterator crpIt = std::find_if(s.iterators().allCells().begin(),
+																										  s.iterators().allCells().end(),
+																										  boost::bind(&Cell::getCofaceCompanion, _1, face));
+			 if (crpIt != s.iterators().allCells().end()) {
 				crpFound = *crpIt;
 			 }
           // Go through all cells and search for a coreduction pair
@@ -121,8 +121,8 @@ class SComplexAlgs{
     std::set<SourceGenerator_P> cells;
 
 
-	 for (typename SComplex::AllCellsIterators::iterator it = A_SComplexCR().allCellsIterators().begin(),
-			  end = A_SComplexCR().allCellsIterators().end();
+	 for (typename SComplex::Iterators::AllCells::iterator it = A_SComplexCR().iterators().allCells().begin(),
+			  end = A_SComplexCR().iterators().allCells().end();
 			it != end; ++it) {
       cells.insert((SourceGenerator_P)*it);
 	 }

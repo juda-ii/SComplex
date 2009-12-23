@@ -37,7 +37,7 @@ public:
   class Cell;
 
   typedef IteratorsImpl<false> Iterators;
-  typedef IteratorsImpl<false> ConstIterators;
+  typedef IteratorsImpl<true> ConstIterators;
 
   typedef int Dim;
   
@@ -48,7 +48,7 @@ public:
   using BCubCelSet::cardinality;
 
   ConstIterators iterators() const;
-  ConstIterators iterators();
+  Iterators iterators();
   
   // So far this code reduces to finding a vertex
   Cell getBaseCell();
@@ -70,7 +70,9 @@ public:
     int baseDimension;
     std::vector<Cell> collectedHomGenerators;
 
-  friend class Iterators;
+  template<bool isConst>
+  friend class IteratorsImpl;
+  
 };
 
     class CubSComplex::Cell : public BitCoordIterator{
@@ -315,7 +317,7 @@ public:
   typedef CubSComplex::IteratorProvider<CubSComplex::CbdNumerator, isConst> CbdCells;
 
 
-  Iterators(SComplexRef _scomplex): scomplex(_scomplex) {}
+  IteratorsImpl(SComplexRef _scomplex): scomplex(_scomplex) {}
   
   AllCells allCells();
   DimCells dimCells(const Dim& dim);
@@ -372,16 +374,20 @@ inline void CubSComplex::storeReductionPair(const CubSComplex::Cell& coface, con
 }
 
 
-inline CubSComplex::Iterators CubSComplex::iterators() const {
+inline CubSComplex::Iterators CubSComplex::iterators() {
   return Iterators(*this);
 }
 
+inline CubSComplex::ConstIterators CubSComplex::iterators() const {
+  return ConstIterators(*this);
+}
+
 template<bool isConst>
-inline CubSComplex::Iterators<isConst>::AllCells CubSComplex::Iterators<isConst>::allCells() {
+inline typename CubSComplex::IteratorsImpl<isConst>::AllCells CubSComplex::IteratorsImpl<isConst>::allCells() {
   return AllCells(CubSComplex::CellNumerator(scomplex));
 }
 
 template<bool isConst>
-inline CubSComplex::Iterators<isConst>::DimCells CubSComplex::Iterators<isConst>::dimCells(const Dim& dim) {
-  return DimCells(CubSComplex::CellDimNumerator(scomplex, dim));
+inline typename CubSComplex::IteratorsImpl<isConst>::DimCells CubSComplex::IteratorsImpl<isConst>::dimCells(const Dim& dim) {
+  return DimCells(CellDimNumerator(scomplex, dim));
 }

@@ -312,7 +312,7 @@ template<bool isConst>
 class CubSComplex::IteratorsImpl {
   typedef typename boost::mpl::if_c<isConst, const CubSComplex&, CubSComplex&>::type SComplexRef;
 public:
-  typedef CubSComplex::IteratorProvider<CubSComplex::CellNumerator, isConst> AllCells;
+  typedef CubSComplex::IteratorProvider<CellNumerator, isConst> AllCells;
   typedef CubSComplex::IteratorProvider<CubSComplex::CellDimNumerator, isConst> DimCells;
   typedef CubSComplex::IteratorProvider<CubSComplex::CbdNumerator, isConst> CbdCells;
 
@@ -321,7 +321,7 @@ public:
   
   AllCells allCells();
   DimCells dimCells(const Dim& dim);
-
+  //  CbdCells cbd(const Cell);
   
 private:
   SComplexRef scomplex;

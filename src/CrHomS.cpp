@@ -32,7 +32,7 @@ void CrHomS(int argc,char* argv[]){
   string fileName=argc>1 ? string(argv[1]) : "sphere1d.txt";
   cout << " --- Reading cubical cellular set from  " << fileName  << endl;
 
-  CRef<SComplex> SComplexCR(new SComplex(fileName.c_str()));
+  CRef<SComplex> SComplexCR(new SComplex(readCubCellSet<BCubSet,BCubCelSet>(fileName.c_str())));
   cout << "Successfully read  " << fileName <<
           " of "  << SComplexCR().cardinality() << " cells " << endl;
 
@@ -40,14 +40,15 @@ void CrHomS(int argc,char* argv[]){
 
 
   Stopwatch swComp,swRed;
-  SComplexAlgs<CubSComplex>::shave(SComplexCR());
+  (ShaveAlgorithm<CubSComplex>(SComplexCR()))();  
   cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
+  
   Stopwatch swCoRed;
-  SComplexAlgs<CubSComplex>::coreduce(SComplexCR());
+  (CoreductionAlgorithm<CubSComplex>(SComplexCR(), false, SComplexCR().getBaseDimension() == 0))();
   cout << " --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed <<  endl;
 
   CRef<ReducibleFreeChainComplexType> RFCComplexCR=
-     SComplexAlgs<CubSComplex>::ReducibleFreeChainComplexOverZFromSComplex<ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR);
+		(ReducibleFreeChainComplexOverZFromSComplexAlgorithm<CubSComplex, ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR()))();
   cout << " --- RFCC constructed  " << endl;
 
   CRef<HomologySignature> homSignCR=HomAlgFunctors<FreeModuleType>::homSignViaAR_Random(RFCComplexCR);
@@ -76,3 +77,4 @@ int main(int argc,char* argv[]){
     std::cout << "Caught an unknown exception: " << endl;
   }
 }
+

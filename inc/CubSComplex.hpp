@@ -1,3 +1,7 @@
+#ifndef CUB_SCOMPLEX_HPP
+#define CUB_SCOMPLEX_HPP
+
+
 #include <sstream>
 
 #include "capd/repSet/ElementaryCell.h"
@@ -6,349 +10,113 @@
 #include "capd/bitSet/CubSetT.hpp"
 #include "capd/homologicalAlgebra/readCubCellSet.hpp"
 
-#include <boost/mpl/if.hpp>
-#include <iterator>
+#include <boost/assert.hpp>
 
-typedef unsigned long int cluster;
-typedef BitSetT<BitmapT<cluster> > BitSet;
-typedef EuclBitSetT<BitSet,embeddingDim> EuclBitSet;
-typedef CubSetT<EuclBitSet> BCubSet;
-typedef CubCellSetT<EuclBitSet> BCubCelSet;
-typedef BCubCelSet::PointIterator PointIterator;
-typedef BCubCelSet::BitCoordIterator BitCoordIterator;
-typedef BCubCelSet::BitIterator BitIterator;
+class CubSComplex {
+public:
 
-class CubSComplex : public BCubCelSet{
+  class Cell;
+  typedef int Dim;
+  typedef int Color;
+
 private:
 
   template<typename NumeratorT, bool isConst>
   class IteratorProvider;
+
   class CellNumerator;
   class CellDimNumerator;
   class CbdNumerator;
-  
+
+  typedef unsigned long int cluster;
+  typedef BitSetT<BitmapT<cluster> > BitSet;
+  typedef EuclBitSetT<BitSet,embeddingDim> EuclBitSet;
+  typedef CubSetT<EuclBitSet> BCubSet;
+  typedef CubCellSetT<EuclBitSet> BCubCellSet;
+
+
   template<bool isConst>
   class IteratorsImpl;
-  
+
+  template<bool isConst>
+  class ColoredIteratorsImpl {
+
+  public:
+	 typedef IteratorsImpl<isConst> Iterators;
+
+	 template<CubSComplex::Color color>
+	 class Color {
+	 public:
+		typedef IteratorsImpl<isConst> Iterators;
+	 };
+  };
+
 public:
-
-  class Cell;
-
+  
   typedef IteratorsImpl<false> Iterators;
   typedef IteratorsImpl<true> ConstIterators;
 
-  typedef int Dim;
+
+  typedef ColoredIteratorsImpl<false> ColoredIterators;
+  typedef ColoredIteratorsImpl<true> ColoredConstIterators;
   
   CubSComplex();
   CubSComplex(const int* A_w, bool clear=false);
-  CubSComplex(const char* fileName);
+  explicit CubSComplex(CRef<BCubCellSet> _bCubCellSet);
 
-  using BCubCelSet::cardinality;
+  size_t cardinality();
 
-  ConstIterators iterators() const;
-  Iterators iterators();
-  
+   ConstIterators iterators() const;
+   Iterators iterators();
+
+  ColoredConstIterators::Iterators iterators(const Color& color) const;
+  ColoredIterators::Iterators iterators(const Color& color);
+
+  template<Color color>
+  typename ColoredIterators::Color<color>::Iterators iterators();
+
+  template<Color color>
+  typename ColoredConstIterators::Color<color>::Iterators iterators() const;
+
   // So far this code reduces to finding a vertex
   Cell getBaseCell();
+
+  Dim getBaseDimension() const;
+
+protected:
+  CRef<BCubCellSet> bCubCellSetCR;
+  Dim baseDimension;
   
-  // This is always false for standard cubical homology
-  bool mayReduce();
-
-  // This is always true for standard cubical homology
-    // as long as there remains a nonreduced vertex
-    // A special code will have to be written for higher dimensions
-  bool isExtractable();
-
-    void storeGenerator(const Cell& c);
-
-    // This will be needed only for homology maps
-  void storeReductionPair(const Cell& coface, const Cell& face);
-  
-  protected:
-    int baseDimension;
-    std::vector<Cell> collectedHomGenerators;
-
   template<bool isConst>
   friend class IteratorsImpl;
   
 };
 
-    class CubSComplex::Cell : public BitCoordIterator{
-      friend class CellNumerator;
-      friend class CellDimNumerator;
-      typedef BitCoordIterator::WordIterator WordIterator;
-      public:
-        // Default constructor - should construct
-        // something which bool converts to false
-        Cell():BitCoordIterator(EuclBitSet()){}
-        Cell(const PointIterator& ptIt):BitCoordIterator(ptIt){}
-        Cell(const BitCoordIterator& ptIt):BitCoordIterator(ptIt){}
+inline CubSComplex::Dim CubSComplex::getBaseDimension() const {
+  return baseDimension;
+}
 
-        bool isValid() const{
-            return this->wIt < this->getBitmap().getBitmapEnd();
-        }
+inline size_t CubSComplex::cardinality() {
+  return bCubCellSetCR().cardinality();
+}
 
-		void toEnd() {
-		  this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
-		}
-		
-        Cell& operator=(bool b){
-          if(!b){
-            this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
-          }else{
-            this->wIt= (WordIterator) this->getBitmap().getBitmap();
-            this->bit=0;
-          }
-          return *this;
-        }
-
-        bool getCofaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-          return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeCoFace(*this,companion);
-        }
-
-        bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-          return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
-        }
-
-        void remove(){
-          this->clearBit();
-        }
-        bool present() const{
-          return this->getBit()!=0;
-        }
-        operator ElementaryCell(){
-          int dim=this->embDim();
-          return ElementaryCell(this->coords(),dim);
-        }
-    };
-
-  template<typename NumeratorT, bool isConst>
-  class CubSComplex::IteratorProvider {
-  public:
-	 typedef NumeratorT Numerator;
-
-  private:
-	 template<typename ValueT>
-	 class IteratorFromNumeratorAdapter;
-
-	 typedef typename boost::mpl::if_c<isConst, const typename Numerator::value_type, typename Numerator::value_type>::type ValueT;
-  public:
-	 
-	 typedef IteratorFromNumeratorAdapter<ValueT>  iterator;
-
-	 IteratorProvider(const Numerator& numerator): first(numerator), last(findLast(numerator)) {}
-	 
-	 iterator begin() const {
-		Numerator tmp = first;
-		tmp.MoveNext();
-		return iterator(tmp);
-	 }
-
-	 iterator end() const { return iterator(last); }
-
-	 private:
-
-	 static Numerator findLast(Numerator numerator) {
-		numerator.toEnd();
-		return numerator;
-	 }
-	 
-	 const Numerator first, last;
-  };
-
-
-template<typename NumeratorT, bool isConst>
-template<typename ValueT>
-class CubSComplex::IteratorProvider<NumeratorT, isConst>::IteratorFromNumeratorAdapter: public std::iterator<forward_iterator_tag, ValueT> {
-
-  typedef std::iterator<forward_iterator_tag, ValueT> Base;
-  typedef typename IteratorProvider<NumeratorT, isConst>::Numerator Numerator;
-  Numerator currentNumerator;
-
-
-  
-public:
-
-  explicit IteratorFromNumeratorAdapter(const Numerator& numerator): currentNumerator(numerator) {
-  }
-
-	 IteratorFromNumeratorAdapter& operator++() {
-		currentNumerator.MoveNext();
-		return *this;
-	 }
-
-	 IteratorFromNumeratorAdapter operator++(int) {
-		IteratorFromNumeratorAdapter tmp(*this);
-		currentNumerator.MoveNext();
-		return tmp;
-	 }
-
-  typename Base::reference operator*() {
-		return currentNumerator.Current();
-	 }
-
-  typename Base::pointer operator->()  {
-		return &currentNumerator.Current();
-	 }
-
-	 bool operator==(const IteratorFromNumeratorAdapter& o) const {
-		return this->currentNumerator == o.currentNumerator;
-	 }
-
-	 bool operator!=(const IteratorFromNumeratorAdapter& o) const {
-		return !(*this == o);
-	 }
-
-  };
-
-
-class CubSComplex::CellNumerator{
-  
-public:
-  typedef Cell value_type;
-  
-  CellNumerator(const CubSComplex& s):cCell(s){
-	 --cCell;
-  }
-  
-        bool MoveNext(){
-          ++cCell;
-          cCell.moveToFirstPixel();
-          return cCell.wIt < cCell.getBitmap().getBitmapEnd();
-        }
-
-        Cell& Current(){
-          return cCell;
-        }
-
-  void toEnd() {
-	 cCell.toEnd();
-  }
-  
-  bool operator==(const CellNumerator& o) const {
-	 return this->cCell.wIt == o.cCell.wIt;
-  }
-
-protected:
-        Cell cCell;
-    };
-
-    class CubSComplex::CellDimNumerator{
-	 public:
-		typedef Cell value_type;
-		
-        CellDimNumerator(const CubSComplex& s,int d):cCell(s),dim(d){
-          --cCell;
-        }
-
-
-		bool operator==(const CellDimNumerator& o) const {
-		  return this->cCell.wIt == o.cCell.wIt;
-		}
-
-		bool MoveNext(){
-          for(;;){
-            ++cCell;
-            cCell.moveToFirstPixel();
-            if(cCell.wIt == cCell.getBitmap().getBitmapEnd()) return false;
-            if(cCell.ownDim()==dim) return true;
-          }
-        }
-		void toEnd() {
-		  cCell.toEnd();
-		}
-		
-		Cell& Current(){
-          return cCell;
-        }
-      protected:
-        Cell cCell;
-        int dim;
-    };
-
-    class CubSComplex::CbdNumerator{
-	 public:
-		typedef Cell value_type;
-		
-        CbdNumerator(const Cell& c):cCell(c),center(c),i(0),downDir(true){
-          cCell=false;
-        }
-
-		void toEnd() {
-		  cCell.toEnd();
-		}
-		
-		bool operator==(const CbdNumerator& o) const {
-		  return this->cCell.wIt == o.cCell.wIt;
-		}
-
-		bool MoveNext(){
-          while(i < cCell.embDim()){
-            // process only directions in which cell is degenerate
-            if(!downDir || !center.odd(i)){
-				  cCell=center;
-              // First check the bottom face
-              if(downDir){
-                cCell.decInDir(i);
-                downDir=false;
-              // and now go to the top face
-              }else{
-                cCell.incInDir(i);;
-                downDir=true;
-                ++i;
-              }
-				  return true;
-            }else{
-              ++i;
-            }
-          }
-			 cCell=false;
-			 cCell.toEnd();
-          return false;
-        }
-        Cell& Current(){
-          return cCell;
-        }
-      protected:
-        Cell cCell,center;
-        int i;
-        bool downDir;
-    };
-
-
-template<bool isConst>
-class CubSComplex::IteratorsImpl {
-  typedef typename boost::mpl::if_c<isConst, const CubSComplex&, CubSComplex&>::type SComplexRef;
-public:
-  typedef CubSComplex::IteratorProvider<CellNumerator, isConst> AllCells;
-  typedef CubSComplex::IteratorProvider<CellDimNumerator, isConst> DimCells;
-  typedef CubSComplex::IteratorProvider<CbdNumerator, isConst> CbdCells;
-
-
-  IteratorsImpl(SComplexRef _scomplex): scomplex(_scomplex) {}
-  
-  AllCells allCells() const;
-  DimCells dimCells(const Dim& dim) const;
-  CbdCells cbdCells(const Cell& cell) const;
-  
-private:
-  SComplexRef scomplex;
-};
-
+#include "CubSComplex_Cell.hpp"
+#include "CubSComplex_IteratorProvider.hpp"
+#include "CubSComplex_Iterators.hpp"
+#include "CubSComplex_ColoredIterators.hpp"
+#include "CubSComplex_Numerators.hpp"
 
 inline CubSComplex::CubSComplex():
-  BCubCelSet(),baseDimension(0)
+  bCubCellSetCR(new BCubCellSet()), baseDimension(0)
 {}
 
 inline CubSComplex::CubSComplex(const int* A_w, bool clear):
-  BCubCelSet(A_w,clear),baseDimension(0)
+  bCubCellSetCR(new BCubCelSet(A_w,clear)),baseDimension(0)
 {}
 
-inline CubSComplex::CubSComplex(const char* fileName):baseDimension(0){
-  CRef<BCubCelSet> cubCellSetCR=readCubCellSet<BCubSet,BCubCelSet>(fileName);
-  cubCellSetCR().addEmptyCollar();
-  swap(*static_cast<BCubCelSet*>(this),cubCellSetCR());
-
+inline CubSComplex::CubSComplex(CRef<BCubCellSet> _bCubCellSet):baseDimension(0){
+  bCubCellSetCR = _bCubCellSet;
+  bCubCellSetCR().addEmptyCollar();
 }
 
   
@@ -356,51 +124,44 @@ inline CubSComplex::CubSComplex(const char* fileName):baseDimension(0){
 inline CubSComplex::Cell CubSComplex::getBaseCell(){
   CellNumerator cn(*this);
   while(cn.MoveNext()){
-	 if(!cn.Current().isValid() || cn.Current().ownDim()==baseDimension ) break;
+	 if(!cn.Current().isValid() ||
+		 cn.Current().getDim()==baseDimension ) break;
   }
   return cn.Current();
 }
 
-// This is always false for standard cubical homology
-inline bool CubSComplex::mayReduce(){
-  return false;
-}
-
-// This is always true for standard cubical homology
-// as long as there remains a nonreduced vertex
-// A special code will have to be written for higher dimensions
-inline bool CubSComplex::isExtractable(){
-  return baseDimension==0;
-}
-
-inline void CubSComplex::storeGenerator(const CubSComplex::Cell& c){
-  collectedHomGenerators.push_back(c);
-}
-
-// This will be needed only for homology maps
-inline void CubSComplex::storeReductionPair(const CubSComplex::Cell& coface, const CubSComplex::Cell& face){
-}
-
-
 inline CubSComplex::Iterators CubSComplex::iterators() {
+  throw std::logic_error("Not implemented yet."); // How cn I iterate over removed elements ?
+
   return Iterators(*this);
 }
 
 inline CubSComplex::ConstIterators CubSComplex::iterators() const {
+  throw std::logic_error("Not implemented yet."); // How cn I iterate over removed elements ?
+
   return ConstIterators(*this);
 }
 
-template<bool isConst>
-inline typename CubSComplex::IteratorsImpl<isConst>::AllCells CubSComplex::IteratorsImpl<isConst>::allCells() const {
-  return AllCells(CellNumerator(scomplex));
+inline CubSComplex::ColoredConstIterators::Iterators CubSComplex::iterators(const Color& color) const {
+  BOOST_ASSERT(color == 0);
+  return ColoredConstIterators::Iterators(*this);
 }
 
-template<bool isConst>
-inline typename CubSComplex::IteratorsImpl<isConst>::DimCells CubSComplex::IteratorsImpl<isConst>::dimCells(const Dim& dim) const {
-  return DimCells(CellDimNumerator(scomplex, dim));
+inline CubSComplex::ColoredIterators::Iterators CubSComplex::iterators(const Color& color) {
+  BOOST_ASSERT(color == 0);
+  return ColoredIterators::Iterators(*this);
 }
 
-template<bool isConst>
-inline typename CubSComplex::IteratorsImpl<isConst>::CbdCells CubSComplex::IteratorsImpl<isConst>::cbdCells(const Cell& cell) const {
-  return CbdCells(CbdNumerator(cell));
+template<>
+inline CubSComplex::ColoredIterators::Color<0>::Iterators CubSComplex::iterators<0>() {
+  return ColoredIterators::Color<0>::Iterators(*this);
 }
+
+template<>
+inline CubSComplex::ColoredConstIterators::Color<0>::Iterators CubSComplex::iterators<0>() const {
+  return ColoredConstIterators::Color<0>::Iterators(*this);
+}
+
+
+#endif
+

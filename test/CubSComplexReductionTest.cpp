@@ -36,7 +36,7 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
   Stopwatch swTot;
   cout << " --- Reading cubical cellular set from  " << fileName  << endl;
 
-  CRef<SComplex> SComplexCR(new SComplex(fileName.c_str()));
+  CRef<SComplex> SComplexCR(new SComplex(readCubCellSet<BCubSet,BCubCelSet>(fileName.c_str())));
   cout << "Successfully read  " << fileName <<
           " of "  << SComplexCR().cardinality() << " cells " << endl;
 
@@ -45,20 +45,19 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
 
 
   Stopwatch swComp,swRed;
-  SComplexAlgs<CubSComplex> algorithm;
-  
-  algorithm.shave(SComplexCR());
+
+  (ShaveAlgorithm<CubSComplex>(SComplexCR()))();  
   cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
   get<1>(result) = SComplexCR().cardinality();
   
   Stopwatch swCoRed;
 
-  algorithm.coreduce(SComplexCR());
+  (CoreductionAlgorithm<CubSComplex>(SComplexCR(), false, SComplexCR().getBaseDimension() == 0))();
   cout << " --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed <<  endl;
   get<2>(result) = SComplexCR().cardinality();
   
   CRef<ReducibleFreeChainComplexType> RFCComplexCR=
-     algorithm.ReducibleFreeChainComplexOverZFromSComplex<ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR);
+	 (ReducibleFreeChainComplexOverZFromSComplexAlgorithm<CubSComplex, ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR()))();
   cout << " --- RFCC constructed  " << endl;
 
   CRef<HomologySignature> homSignCR=HomAlgFunctors<FreeModuleType>::homSignViaAR_Random(RFCComplexCR);

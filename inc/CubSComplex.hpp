@@ -11,6 +11,8 @@
 #include "capd/homologicalAlgebra/readCubCellSet.hpp"
 
 #include <boost/assert.hpp>
+#include <boost/optional.hpp>
+
 
 class CubSComplex {
 public:
@@ -78,9 +80,10 @@ public:
   template<Color color>
   typename ColoredConstIterators::Color<color>::Iterators iterators() const;
 
-  // So far this code reduces to finding a vertex
-  Cell getBaseCell();
 
+  boost::optional<Cell> getUniqueFace(const Cell& cell) const;
+  boost::optional<Cell> getUniqueCoFace(const Cell& cell) const;
+  
   Dim getBaseDimension() const;
 
 protected:
@@ -119,17 +122,6 @@ inline CubSComplex::CubSComplex(CRef<BCubCellSet> _bCubCellSet):baseDimension(0)
   bCubCellSetCR().addEmptyCollar();
 }
 
-  
-// So far this code reduces to finding a vertex
-inline CubSComplex::Cell CubSComplex::getBaseCell(){
-  CellNumerator cn(*this);
-  while(cn.MoveNext()){
-	 if(!cn.Current().isValid() ||
-		 cn.Current().getDim()==baseDimension ) break;
-  }
-  return cn.Current();
-}
-
 inline CubSComplex::Iterators CubSComplex::iterators() {
   throw std::logic_error("Not implemented yet."); // How cn I iterate over removed elements ?
 
@@ -143,25 +135,51 @@ inline CubSComplex::ConstIterators CubSComplex::iterators() const {
 }
 
 inline CubSComplex::ColoredConstIterators::Iterators CubSComplex::iterators(const Color& color) const {
-  BOOST_ASSERT(color == 0);
+  BOOST_ASSERT(color == 1);
   return ColoredConstIterators::Iterators(*this);
 }
 
 inline CubSComplex::ColoredIterators::Iterators CubSComplex::iterators(const Color& color) {
-  BOOST_ASSERT(color == 0);
+  BOOST_ASSERT(color == 1);
   return ColoredIterators::Iterators(*this);
 }
 
 template<>
-inline CubSComplex::ColoredIterators::Color<0>::Iterators CubSComplex::iterators<0>() {
-  return ColoredIterators::Color<0>::Iterators(*this);
+inline CubSComplex::ColoredIterators::Color<1>::Iterators CubSComplex::iterators<1>() {
+  return ColoredIterators::Color<1>::Iterators(*this);
 }
 
 template<>
-inline CubSComplex::ColoredConstIterators::Color<0>::Iterators CubSComplex::iterators<0>() const {
-  return ColoredConstIterators::Color<0>::Iterators(*this);
+inline CubSComplex::ColoredConstIterators::Color<1>::Iterators CubSComplex::iterators<1>() const {
+  return ColoredConstIterators::Color<1>::Iterators(*this);
 }
 
+
+// 	 bool getCofaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
+// 		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->
+// 	 }
+
+// 	 bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
+// 		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
+// 	 }
+
+inline boost::optional<CubSComplex::Cell> CubSComplex::getUniqueFace(const Cell& cell) const {
+  Cell face;
+  if (bCubCellSetCR().isFreeCoFace(const_cast<Cell&>(cell), face)) {
+	 return face;
+  } else {
+	 return boost::optional<Cell>(); 
+  }
+}
+
+inline boost::optional<CubSComplex::Cell> CubSComplex::getUniqueCoFace(const Cell& cell) const {
+  Cell coface;
+  if (bCubCellSetCR().isFreeFace(const_cast<Cell&>(cell), coface)) {
+	 return coface;
+  } else {
+	 return boost::optional<Cell>(); 
+  }
+}
 
 #endif
 

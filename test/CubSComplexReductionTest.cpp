@@ -52,7 +52,7 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
   
   Stopwatch swCoRed;
 
-  (CoreductionAlgorithm<CubSComplex>(SComplexCR(), false, SComplexCR().getBaseDimension() == 0))();
+  (CoreductionAlgorithmFactory::createDefault(SComplexCR()))();
   cout << " --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed <<  endl;
   get<2>(result) = SComplexCR().cardinality();
   

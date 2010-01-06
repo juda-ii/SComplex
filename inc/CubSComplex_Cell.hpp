@@ -7,6 +7,7 @@ class CubSComplex::Cell: private BCubCellSet::BitCoordIterator {
 	 friend class CellNumerator;
 	 friend class CbdNumerator;
 	 friend class CellDimNumerator;
+	 friend class CubSComplex;
 	 typedef BCubCellSet::BitCoordIterator::WordIterator WordIterator;
 
 public:
@@ -14,10 +15,6 @@ public:
 	 // something which bool converts to false
 	 Cell(): BitCoordIterator(EuclBitSet()){}
 	 Cell(const CubSComplex& s): BitCoordIterator(s.bCubCellSetCR()){}
-
-	 bool isValid() const{
-		  return this->wIt < this->getBitmap().getBitmapEnd();
-	 }
 
 	 Cell& operator=(bool b){
 		  if(!b){
@@ -29,23 +26,15 @@ public:
 		  return *this;
 	 }
 
-	 bool getCofaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeCoFace(*this, companion);
-	 }
-
-	 bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
-	 }
-
 	 Color getColor() const{
-		  return this->getBit() ? 0 : 1;
+		  return this->getBit() ? 1 : 2;
 	 }
 
 	 template<Color color>
 	 void setColor();
 
 	 void setColor(const Color& color) {
-		  BOOST_ASSERT(color == 0);
+		  BOOST_ASSERT(color == 2);
 		  clearBit();
 	 }
 
@@ -69,7 +58,7 @@ private:
 };
 
 template<>
-inline void CubSComplex::Cell::setColor<1>() {
+inline void CubSComplex::Cell::setColor<2>() {
 	 clearBit();
 }
 

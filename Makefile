@@ -68,15 +68,18 @@ depend: $(APP_SRCS) $(LIB_SRCS)  $(TEST_SRCS)
 src/CrHomS.o: ./inc/CubSComplex.hpp ./inc/CubSComplex_Cell.hpp
 src/CrHomS.o: ./inc/CubSComplex_IteratorProvider.hpp
 src/CrHomS.o: ./inc/CubSComplex_Iterators.hpp
+src/CrHomS.o: ./inc/CubSComplex_ColoredIterators.hpp
 src/CrHomS.o: ./inc/CubSComplex_Numerators.hpp ./inc/SComplexAlgs.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_Cell.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_IteratorProvider.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_Iterators.hpp
+test/CubSComplexReductionTest.o: ./inc/CubSComplex_ColoredIterators.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_Numerators.hpp
 test/CubSComplexReductionTest.o: ./inc/SComplexAlgs.hpp
 test/CubSComplexIteratorsTest.o: ./inc/CubSComplex.hpp
 test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Cell.hpp
 test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_IteratorProvider.hpp
 test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Iterators.hpp
+test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_ColoredIterators.hpp
 test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Numerators.hpp

@@ -23,10 +23,9 @@ public:
 private:
   void storeGenerator(const Cell& c);
   void storeReductionPair(const Cell& c, const Cell& f) {}
-
-  boost::optional<std::pair<Cell, Cell> > getNextPair();
-  
+  boost::optional<std::pair<Cell, Cell> > getNextPair();  
   void addCellsToProcess(const Cell& sourceFace);
+  void getUniqueFace(const Cell& cell, boost::optional<Cell>& face);
   
   SComplex& s;
   const ReductionPairProvider reductionPairProvider;
@@ -116,10 +115,23 @@ inline void CoreductionAlgorithm<SComplex>::storeGenerator(const Cell& c){
 }
 
 template<typename SComplex>
+inline void CoreductionAlgorithm<SComplex>::getUniqueFace(const Cell& cell, boost::optional<Cell>& face) {
+  typename SComplex::ColoredIterators::Iterators::CbdCells::iterator cbd = s.template iterators<1>().cbdCells(cell).begin(),
+	 end = s.template iterators<1>().cbdCells(cell).end();
+
+  if (cbd != end) {
+	 typename SComplex::ColoredIterators::Iterators::CbdCells::iterator it = cbd;
+	 ++cbd;
+	 if (cbd == end) {
+		face = *it;
+	 }
+  }
+
+}
+
+template<typename SComplex>
 inline boost::optional<std::pair<typename CoreductionAlgorithm<SComplex>::Cell,
 											typename CoreductionAlgorithm<SComplex>::Cell> > CoreductionAlgorithm<SComplex>::getNextPair() {
-
-  using namespace boost::lambda;
   
   while (! cellsToProcess.empty() ) {
 	 // get a cell from the queue
@@ -129,6 +141,9 @@ inline boost::optional<std::pair<typename CoreductionAlgorithm<SComplex>::Cell,
 	 if(coface.getColor() == 1) {
 		// check if a free coface and store the companion
 		boost::optional<Cell> face = s.getUniqueFace(coface);
+//  		boost::optional<Cell> face;
+//  		s.getUniqueFace(coface, face);
+		
 		if (face) {
 		  return std::make_pair(*face, coface);
 		} else {
@@ -166,6 +181,7 @@ inline int CoreductionAlgorithm<SComplex>::operator()(){
 		// a compact set, we just pick up such a cell and
 		// remove it from the complex
 		boost::optional<Cell> sourceFace = extractor();
+
 		if(sourceFace){
 		  addCellsToProcess(*sourceFace);
 		  sourceFace->template setColor<2>();
@@ -192,15 +208,16 @@ inline void CoreductionAlgorithm<SComplex>::addCellsToProcess(const Cell& source
 
 template<typename SComplex>
 inline void ShaveAlgorithm<SComplex>::operator()(){
+
+  Cell face(s);
   for(int d=embeddingDim-1;d>=0;--d){
 	 typedef typename SComplex::ColoredIterators::Iterators::DimCells::iterator DimIt;
 
 	 for (DimIt it = s.template iterators<1>().dimCells(d).begin(),
 			  end = s.template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
-
 		boost::optional<Cell> face = s.getUniqueCoFace(*it);
-		if(face){
+		if (face) {
 		  face->template setColor<2>();
 		  it->template setColor<2>();
 		}

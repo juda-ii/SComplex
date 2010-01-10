@@ -12,6 +12,7 @@ class CubSComplex::IteratorsImpl {
 public:
   typedef CubSComplex::IteratorProvider<CellNumerator, isConst> AllCells;
   typedef CubSComplex::IteratorProvider<CellDimNumerator, isConst> DimCells;
+  typedef CubSComplex::IteratorProvider<CbdNumerator, isConst> BdCells;  
   typedef CubSComplex::IteratorProvider<CbdNumerator, isConst> CbdCells;
 
 
@@ -19,6 +20,7 @@ public:
   
   AllCells allCells() const;
   DimCells dimCells(const Dim& dim) const;
+  CbdCells bdCells(const Cell& cell) const;
   CbdCells cbdCells(const Cell& cell) const;
   
 private:

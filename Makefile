@@ -1,4 +1,6 @@
 APP_NAME=CrHomS
+LIB_NAME=libSComplex.a
+
 
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
@@ -8,9 +10,13 @@ INC_PATHS = $(LOCAL_INC_PATHS) -I$(CAPD_HOME)/include -I$(BOOST_HOME)/include
 LIB_PATHS = -L$(BOOST_HOME)/lib -L./ -L$(CAPD_HOME)/lib
 
 
+LIB_SRCS = src/CubSComplex_Cell.cpp
 APP_SRCS = src/CrHomS.cpp
+
+LIB_OBJS = $(LIB_SRCS:.cpp=.o)
 APP_OBJS = $(APP_SRCS:.cpp=.o)
-APP_LIBS = -lcapd
+
+APP_LIBS = -lcapd -lSComplex
 
 
 TEST_APP_NAME=CubSComplexTest
@@ -19,7 +25,7 @@ TEST_SRCS = test/CubSComplexReductionTest.cpp \
 	test/CubSComplexTestMain.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
-TEST_LIBS = -lcapd -lboost_unit_test_framework
+TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
 
 
 
@@ -31,7 +37,8 @@ DEBUG_OFF=-DBOOST_DISABLE_ASSERTS
 DEBUG=$(DEBUG_ON)
 BOOST_FLAGS= -DBOOST_TEST_DYN_LINK
 DEPEND_FLAGS=$(CFLAGS) $(LOCAL_INC_PATHS) $(BOOST_FLAGS)
-WARNINGS= -Wall -Winline -Wdisabled-optimization
+WARNINGS= -Wall
+# -Winline -Wdisabled-optimization
 #OPT_FLAGS=-O2 -finline-functions -finline-limit=100000 --param large-function-growth=100000 --param inline-unit-growth=100000
 OPT_FLAGS=-O2
 PROJECT_FLAGS= $(WARNINGS) -pedantic $(OPT_FLAGS)
@@ -46,8 +53,12 @@ all: $(APP_NAME)
 %.o: %.cpp Makefile
 	$(CC) $(COMP_FLAGS) -c $< -o $@
 
-$(APP_NAME): $(APP_OBJS)
+$(LIB_NAME): $(LIB_OBJS)
+	$(AR) rcs $(LIB_NAME) $(LIB_OBJS) 
+
+$(APP_NAME): $(APP_OBJS) $(LIB_NAME) 
 	$(CC) $(COMP_FLAGS) -o $(APP_NAME) $(APP_OBJS) $(LIB_PATHS) $(APP_LIBS)
+
 
 $(TEST_APP_NAME): $(TEST_OBJS)
 	$(CC) -o $(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
@@ -57,7 +68,7 @@ test_exec: $(TEST_APP_NAME)
 
 
 clean:
-	$(RM) $(TEST_OBJS) $(TEST_APP_NAME) $(APP_NAME) $(APP_OBJS)
+	$(RM) $(TEST_OBJS) $(TEST_APP_NAME) $(APP_NAME) $(APP_OBJS) $(LIB_NAME)
 
 depend: $(APP_SRCS) $(LIB_SRCS)  $(TEST_SRCS)
 	makedepend  $(DEPEND_FLAGS) $^

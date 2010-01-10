@@ -81,7 +81,7 @@ public:
 	 typedef Cell value_type;
 		
 	 CbdNumerator(const Cell& c):cCell(c),center(c),i(0),downDir(true){
-		  cCell=false;
+		//		  cCell=false;
 	 }
 
 	 void toEnd() {
@@ -116,7 +116,7 @@ public:
 					 ++i;
             }
 		  }
-		  cCell=false;
+		  //cCell=false;
 		  cCell.toEnd();
 		  return false;
 	 }

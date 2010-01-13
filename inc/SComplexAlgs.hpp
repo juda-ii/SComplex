@@ -22,12 +22,11 @@ public:
   SComplex& getComplex() const {
 	 return complex;
   }
-  
-  CoreductionPair coreductionPair(Cell& a, Cell& b) const {
-	 BOOST_ASSERT(a.getDim() + 1 == b.getDim());
-	 return std::make_pair(boost::ref(a), boost::ref(b));
-  }
 
+  Cell& getFace(const CoreductionPair& coRedPair) {
+	 return boost::unwrap_ref(coRedPair.first);
+  }
+  
   bool reduced(const Cell& cell) const {
 	 return cell.getColor() == 2;
   }
@@ -61,15 +60,14 @@ public:
 	 return boost::optional<CoreductionPair>();
   }
 
-  boost::optional<Cell> getUniqueFace(const Cell& cell) {
-	 Cell face(complex);
-	 if (complex.getUniqueFace(cell, face)) {
-		return boost::optional<Cell>(face);
+  boost::optional<CoreductionPair> getCoreductionPair(Cell& cell) {
+	 if (complex.getUniqueFace(cell, dummyCell3)) {
+	  	return std::make_pair(boost::ref(dummyCell3), boost::ref(cell));
 	 } else {
-		return boost::optional<Cell>();
+		return boost::optional<ReductionPair>();
 	 }
   }
-
+  
   boost::optional<ReductionPair> getReductionPair(Cell& cell) {
 	 if (complex.getUniqueCoFace(cell, dummyCell2)) {
 	  	return std::make_pair(boost::ref(cell), boost::ref(dummyCell2));
@@ -104,7 +102,8 @@ public:
 
 private:
   void storeGenerator(const Cell& c);
-  void storeReductionPair(const Cell& c, const Cell& f) {}
+  void storeCoreductionPair(const CoreductionPair& ) {}
+  
   boost::optional<CoreductionPair> getNextPair();  
   void addCellsToProcess(const Cell& sourceFace);
 
@@ -180,14 +179,12 @@ inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair
   
   while (! cellsToProcess.empty() ) {
 	 Cell& coface=cellsToProcess.front();
-	 //boost::optional<CoreductionPair> result;
 	 
 	 if (! strategy->reduced(coface)) {
-		boost::optional<Cell> face = strategy->getUniqueFace(coface);
-		if (face) {		
-		  //dummyCell1 = coface;
+		boost::optional<CoreductionPair> coreductionPair = strategy->getCoreductionPair(coface);
+		if (coreductionPair) {		
 		  cellsToProcess.pop_front();	 
-		  return strategy->coreductionPair(coface, *face);
+		  return coreductionPair;
 		} else {
 		  addCellsToProcess(coface);
 		}
@@ -198,7 +195,6 @@ inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair
   // Originally there are no candidates in the queue
   // They may also disappear when a connected component
   // is exhausted
-
   // If we know that a coreduction may be there,
   // For instance when treating a non-compact set
   return strategy->forceCoreductionPair();
@@ -213,14 +209,11 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 	 boost::optional<CoreductionPair> nextPair = getNextPair();
 	 
 	 if (nextPair) {
+		storeCoreductionPair(*nextPair);
+		addCellsToProcess(strategy->getFace(*nextPair));
+		
 		strategy->coreduce(*nextPair);		
 		++cnt;++cnt;
-
-		Cell& first = boost::unwrap_ref(nextPair->first);
-		Cell& second = boost::unwrap_ref(nextPair->second);
-
-		storeReductionPair(second, first);
-		addCellsToProcess(second);
 	 } else {
 		// If the search failed or when we even did not try to search
 		// and we know that a cell of lowest dimension is always
@@ -230,10 +223,11 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 		boost::optional<Cell&> sourceFace = strategy->extract();
 
 		if(sourceFace){
+		  storeGenerator(*sourceFace);		  
+		  addCellsToProcess(*sourceFace);
+		  
 		  strategy->reduce(*sourceFace);
 		  ++cnt;
-		  addCellsToProcess(*sourceFace);		  
-		  storeGenerator(*sourceFace);
 		}else{
 		  break; // no base face left: quit any further processing
 		}

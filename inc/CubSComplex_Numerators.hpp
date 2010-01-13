@@ -80,13 +80,13 @@ class CubSComplex::CbdNumerator{
 public:
 	 typedef Cell value_type;
 		
-	 CbdNumerator(const Cell& c):cCell(c),center(c),i(0),downDir(true){
+  CbdNumerator(const Cell& c):center(c),i(0),downDir(true), dim(c.embDim()), cCell(c){
 		//		  cCell=false;
 	 }
 
-	 void toEnd() {
-		  cCell.toEnd();
-	 }
+  void toEnd() {
+	 cCell.toEnd();
+  }
 		
 	 bool operator==(const CbdNumerator& o) const {
 		  return this->cCell.wIt == o.cCell.wIt;
@@ -97,7 +97,7 @@ public:
 	 }
 
 	 bool MoveNext(){
-		  while(i < cCell.embDim()){
+		  while(i < dim){
             // process only directions in which cell is degenerate
             if(!downDir || !center.odd(i)){
 					 cCell=center;
@@ -124,9 +124,11 @@ public:
 		  return cCell;
 	 }
 protected:
-	 Cell cCell,center;
-	 int i;
-	 bool downDir;
+  Cell cCell;
+  const Cell& center;
+  int i;
+  bool downDir;
+  const int dim;
 };
 
 

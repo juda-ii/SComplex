@@ -80,11 +80,9 @@ public:
   template<Color color>
   typename ColoredConstIterators::Color<color>::Iterators iterators() const;
 
-  bool getFaceCompanion(Cell& cell, Cell& companion);
+  bool getUniqueCoFace(Cell& cell, Cell& coface) const;
 
-  boost::optional<Cell> getUniqueFace(const Cell& cell) const;
-  
-  boost::optional<Cell> getUniqueCoFace(const Cell& cell) const;
+  bool getUniqueFace(Cell& cell, Cell& coface) const;
   
   Dim getBaseDimension() const;
 
@@ -156,49 +154,19 @@ inline CubSComplex::ColoredConstIterators::Color<1>::Iterators CubSComplex::iter
   return ColoredConstIterators::Color<1>::Iterators(*this);
 }
 
-
-// 	 bool getCofaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-// 		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->
-// 	 }
-
-// 	 bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
-// 		  return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
-// 	 }
-
-// bool CubSComplex::getFaceCompanion(Cell& cell, Cell& companion) {
-//  	 return reinterpret_cast<const BCubCelSet*>(cell.itSet)->isFreeFace(cell,companion);
-//  }
-
-inline bool CubSComplex::getFaceCompanion(Cell& cell, Cell& companion) {
-  ColoredIterators::Iterators::CbdCells::iterator it = this->iterators(1).cbdCells(cell).begin(),
-	 end = this->iterators(1).cbdCells(cell).end();
-
-  int cnt=0;
-  while(it != end){
-	 if(it->getColor() == 1){
-		if(++cnt>1) return false;
-		companion=*it;;
-	 }
-	 ++it;
-  }
-  return (cnt ? true : false);
-}
-
-inline boost::optional<CubSComplex::Cell> CubSComplex::getUniqueFace(const Cell& cell) const {
-  Cell face(*this);
-  if (bCubCellSetCR().isFreeCoFace(const_cast<Cell&>(cell), face)) {
-	 return face;
+inline bool CubSComplex::getUniqueCoFace(Cell& cell, Cell& coface) const {
+  if (bCubCellSetCR().isFreeFace(cell, coface)) {
+	 return true;
   } else {
-	 return boost::optional<Cell>(); 
+	 return false;
   }
 }
 
-inline boost::optional<CubSComplex::Cell> CubSComplex::getUniqueCoFace(const Cell& cell) const {
-  Cell coface(*this);
-  if (bCubCellSetCR().isFreeFace(const_cast<Cell&>(cell), coface)) {
-	 return coface;
+inline bool CubSComplex::getUniqueFace( Cell& cell, Cell& coface) const {
+  if (bCubCellSetCR().isFreeCoFace(cell, coface)) {
+	 return true;
   } else {
-	 return boost::optional<Cell>(); 
+	 return false;
   }
 }
 

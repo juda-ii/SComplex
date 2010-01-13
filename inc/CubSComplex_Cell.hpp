@@ -11,21 +11,8 @@ class CubSComplex::Cell: private BCubCellSet::BitCoordIterator {
   typedef BCubCellSet::BitCoordIterator::WordIterator WordIterator;
 
 public:
-  // Default constructor - should construct
-  // something which bool converts to false
-  //  Cell(): BitCoordIterator(EuclBitSet()){}
-  Cell(const CubSComplex& s): BitCoordIterator(s.bCubCellSetCR()){}
+  Cell(const CubSComplex& s): BitCoordIterator(s.bCubCellSetCR()) {}
 
-  Cell& operator=(bool b){
-	 if(!b){
-		this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
-	 }else{
-		this->wIt= (WordIterator) this->getBitmap().getBitmap();
-		this->bit=0;
-	 }
-	 return *this;
-  }
-  
   Color getColor() const{
 	 return this->getBit() ? 1 : 2;
   }
@@ -48,13 +35,24 @@ public:
 	 return ElementaryCell(this->coords(),dim);
   }
 
-	 
+  bool getFaceCompanion(Cell& companion) {   // should be const, requires changes in isFreeCoFace to be const
+	 return reinterpret_cast<const BCubCelSet*>(this->itSet)->isFreeFace(*this,companion);
+  }
+
+  inline boost::optional<Cell> getUniqueCoFace(const CubSComplex& complex) {
+	 boost::optional<CubSComplex::Cell> result(complex);
+	 if (complex.bCubCellSetCR().isFreeFace(*this, *result)) {
+	 } else {
+		result.reset();
+	 }
+	 return result;
+  }
+
 private:
 	 
   void toEnd() {
 	 this->wIt=const_cast<WordIterator>(this->getBitmap().getBitmapEnd());
   }
-
 };
 
 template<>

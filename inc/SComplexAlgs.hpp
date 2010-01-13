@@ -3,81 +3,128 @@
 #include <boost/optional.hpp>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
+#include <boost/ref.hpp>
 
 #include <utility>
 
-template<typename SComplex>
+template<typename SComplexT>
+class DefaultCoreductionStrategy {
+
+public:
+  typedef SComplexT SComplex;
+  typedef typename SComplex::Cell Cell;
+  typedef std::pair<boost::reference_wrapper<Cell>, boost::reference_wrapper<Cell> > CoreductionPair;
+
+  DefaultCoreductionStrategy(SComplex& _complex): complex(_complex), dummyCell1(_complex), dummyCell2(_complex),  dummyCell3(_complex) {}
+  
+  SComplex& getComplex() const {
+	 return complex;
+  }
+  
+  static CoreductionPair coreductionPair(Cell& a, Cell& b) {
+	 BOOST_ASSERT(a.getDim() == b.getDim() + 1);
+	 return std::make_pair(boost::ref(a), boost::ref(b));
+  }
+
+  static bool reduced(const Cell& cell) {
+	 return cell.getColor() == 2;
+  }
+
+  static void reduce(const CoreductionPair& nextPair) {
+	 boost::unwrap_ref(nextPair.first).template setColor<2>();
+	 boost::unwrap_ref(nextPair.second).template setColor<2>();	 
+  }
+
+  static void reduce(Cell& cell) {
+	 cell.template setColor<2>();
+  }
+  
+  boost::optional<Cell&> extract() {
+	 typename SComplex::ColoredIterators::Iterators::DimCells::iterator end = complex.iterators(1).dimCells(0).end(),
+		it = complex.iterators(1).dimCells(0).begin();
+
+	 if (it != end) { // iterator has to be only on not reduced, check it
+		if (!reduced(*it)) {
+		  dummyCell1 = *it;
+		  return dummyCell1;
+		}
+	 }
+
+	 // while (it != end) { // iterator has to be only on not reduced, check it
+	 // 	if (!reduced(*it)) {
+	 // 	  dummyCell1 = *it;
+	 // 	  return dummyCell1;
+	 // 	}
+	 // 	++it;
+	 // }
+	 
+	 return boost::optional<Cell&>();	 
+  }
+  
+  boost::optional<CoreductionPair> forceCoreductionPair() {
+	 return boost::optional<CoreductionPair>();
+  }
+
+  boost::optional<Cell&> getUniqueFace(const Cell& cell) {
+	 if (complex.getUniqueFace(cell, dummyCell2)) {
+		return boost::optional<Cell&>(dummyCell2);
+	 } else {
+		return boost::optional<Cell&>();
+	 }
+  }
+
+  boost::optional<Cell&> getUniqueCoFace(const Cell& cell) {
+	 if (complex.getUniqueCoFace(cell, dummyCell2)) {
+		return boost::optional<Cell&>(dummyCell2);
+	 } else {
+		return boost::optional<Cell&>();
+	 }
+  }
+
+private:
+  SComplex& complex;
+  Cell dummyCell1, dummyCell2, dummyCell3;
+};
+
+template<typename StrategyT>
 class CoreductionAlgorithm {
 
 public:
+  typedef StrategyT Strategy;
+  typedef typename Strategy::SComplex SComplex;
+  typedef typename Strategy::Cell Cell;
+  typedef typename Strategy::CoreductionPair CoreductionPair;
+
   
-  typedef typename SComplex::Cell Cell;
-  typedef boost::function< boost::optional<Cell> () > Extractor;
-  typedef boost::function< boost::optional<std::pair<Cell, Cell> > () > ReductionPairProvider;
-  
-  CoreductionAlgorithm(SComplex& _s, const ReductionPairProvider _reductionPairProvider,  const Extractor& _extractor):
-	 s(_s), reductionPairProvider(_reductionPairProvider), extractor(_extractor) {}
+  CoreductionAlgorithm(Strategy* _strategy): strategy(_strategy), dummyCell1(_strategy->getComplex()),
+															dummyCell2(_strategy->getComplex()) {}
+
+  ~CoreductionAlgorithm() {
+	 delete strategy;
+  }
   
   int operator()();
 
 private:
   void storeGenerator(const Cell& c);
   void storeReductionPair(const Cell& c, const Cell& f) {}
-  boost::optional<std::pair<Cell, Cell> > getNextPair();  
+  boost::optional<CoreductionPair> getNextPair();  
   void addCellsToProcess(const Cell& sourceFace);
-  void getUniqueFace(const Cell& cell, boost::optional<Cell>& face);
-  
-  SComplex& s;
-  const ReductionPairProvider reductionPairProvider;
-  const Extractor extractor;
+
+
+  Strategy* strategy;
   
   std::vector<Cell> collectedHomGenerators;
-
-  // A queue for coreduction candidates
   std::deque<Cell> cellsToProcess;
-
+  Cell dummyCell1, dummyCell2;
 };
 
 class CoreductionAlgorithmFactory {
 
-  template<typename SComplex>
-  static boost::optional<typename SComplex::Cell> baseDimExtractor(const SComplex& s) {
-
-	 typename SComplex::ColoredConstIterators::Iterators::DimCells::iterator it = s.iterators(1).dimCells(0).begin(),
-		end = s.iterators(1).dimCells(0).end();
-	 
-	 if (it != end) {
-		return *it;
-	 }
-	 
-	 return boost::optional<typename SComplex::Cell>();	 
-  }
-
-  template<typename SComplex>
-  static boost::optional<std::pair<typename SComplex::Cell, typename SComplex::Cell> >
-  reductionPairProvider(const SComplex& s) {
-	 // Go through all cells and search for a coreduction pair
-	 // if coface is a free coface,
-	 // then the search is successful.
-	 // We preserve the companion face
-	 // and quit the search
-	 return boost::optional<std::pair<typename SComplex::Cell, typename SComplex::Cell> >();	 
-	 for (typename SComplex::ColoredConstIterators::template Color<1>::Iterators::AllCells::iterator it = s.template iterators<1>().allCells().begin(),
-			  end = s.template iterators<1>().allCells().end(); it != end; ++it) {
-
-		boost::optional<typename SComplex::Cell> face = s.getUniqueFace(*it);
-		if (face) {
-		  return std::make_pair(*face, *it);
-		}
-	 }
-  }
-
-  
 public:
   template<typename SComplex>
-  static CoreductionAlgorithm<SComplex> createDefault(SComplex& s) {
-	 return CoreductionAlgorithm<SComplex>(s, boost::bind(reductionPairProvider<SComplex>, s),
-														boost::bind(baseDimExtractor<SComplex>, s));
+  static CoreductionAlgorithm<DefaultCoreductionStrategy<SComplex> > createDefault(SComplex& s) {
+	 return CoreductionAlgorithm<DefaultCoreductionStrategy<SComplex> >(new DefaultCoreductionStrategy<SComplex>(s));
   }
 };
 
@@ -109,83 +156,69 @@ private:
   SComplex& s;
 };
 
-template<typename SComplex>
-inline void CoreductionAlgorithm<SComplex>::storeGenerator(const Cell& c){
+template<typename StrategyT>
+inline void CoreductionAlgorithm<StrategyT>::storeGenerator(const Cell& c){
   collectedHomGenerators.push_back(c);
 }
 
-template<typename SComplex>
-inline void CoreductionAlgorithm<SComplex>::getUniqueFace(const Cell& cell, boost::optional<Cell>& face) {
-  typename SComplex::ColoredIterators::Iterators::CbdCells::iterator cbd = s.template iterators<1>().cbdCells(cell).begin(),
-	 end = s.template iterators<1>().cbdCells(cell).end();
 
-  if (cbd != end) {
-	 typename SComplex::ColoredIterators::Iterators::CbdCells::iterator it = cbd;
-	 ++cbd;
-	 if (cbd == end) {
-		face = *it;
-	 }
-  }
-
-}
-
-template<typename SComplex>
-inline boost::optional<std::pair<typename CoreductionAlgorithm<SComplex>::Cell,
-											typename CoreductionAlgorithm<SComplex>::Cell> > CoreductionAlgorithm<SComplex>::getNextPair() {
+template<typename StrategyT>
+inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair> CoreductionAlgorithm<StrategyT>::getNextPair() {
   
   while (! cellsToProcess.empty() ) {
-	 // get a cell from the queue
-	 Cell coface=cellsToProcess.front();
-	 cellsToProcess.pop_front();
-	 // the cell may have been already removed
-	 if(coface.getColor() == 1) {
-		// check if a free coface and store the companion
-		boost::optional<Cell> face = s.getUniqueFace(coface);
-//  		boost::optional<Cell> face;
-//  		s.getUniqueFace(coface, face);
-		
-		if (face) {
-		  return std::make_pair(*face, coface);
+	 Cell& coface=cellsToProcess.front();	 
+	 //boost::optional<CoreductionPair> result;
+	 
+	 if (! StrategyT::reduced(coface)) {
+		if (strategy->getComplex().getUniqueFace(coface, dummyCell2)) {		
+		  dummyCell1 = coface;
+		  cellsToProcess.pop_front();	 
+		  return StrategyT::coreductionPair(dummyCell1, dummyCell2);
 		} else {
-		  addCellsToProcess(coface);
+		  addCellsToProcess(dummyCell1);
 		}
-	 } 
+	 }
+	 cellsToProcess.pop_front();	 
   }
+
   // Originally there are no candidates in the queue
   // They may also disappear when a connected component
   // is exhausted
 
   // If we know that a coreduction may be there,
   // For instance when treating a non-compact set
-  return reductionPairProvider();
+  return strategy->forceCoreductionPair();
 }
 
 
-template<typename SComplex>
-inline int CoreductionAlgorithm<SComplex>::operator()(){
+template<typename StrategyT>
+inline int CoreductionAlgorithm<StrategyT>::operator()(){
   int cnt=0;
 
   for(;;){
-	 boost::optional<std::pair<Cell, Cell> > nextPair = getNextPair();
+	 boost::optional<CoreductionPair> nextPair = getNextPair();
 	 
 	 if (nextPair) {
-		nextPair->first.template setColor<2>();
-		nextPair->second.template setColor<2>();
+		StrategyT::reduce(*nextPair);		
 		++cnt;++cnt;
-		storeReductionPair(nextPair->second, nextPair->first);		
-		addCellsToProcess(nextPair->first);
+
+		Cell& first = boost::unwrap_ref(nextPair->first);
+		Cell& second = boost::unwrap_ref(nextPair->second);
+
+		storeReductionPair(second, first);
+		addCellsToProcess(second);
 	 } else {
 		// If the search failed or when we even did not try to search
 		// and we know that a cell of lowest dimension is always
 		// a homology generator like in the case of a vertex in
 		// a compact set, we just pick up such a cell and
 		// remove it from the complex
-		boost::optional<Cell> sourceFace = extractor();
+		boost::optional<Cell&> sourceFace = strategy->extract();
 
 		if(sourceFace){
-		  addCellsToProcess(*sourceFace);
-		  sourceFace->template setColor<2>();
+		  StrategyT::reduce(*sourceFace);
 		  ++cnt;
+		  addCellsToProcess(*sourceFace);		  
 		  storeGenerator(*sourceFace);
 		}else{
 		  break; // no base face left: quit any further processing
@@ -196,19 +229,22 @@ inline int CoreductionAlgorithm<SComplex>::operator()(){
   return cnt; // the number of cells removed
 }
 
-template<typename SComplex>
-inline void CoreductionAlgorithm<SComplex>::addCellsToProcess(const Cell& sourceFace) {
+template<typename StrategyT>
+inline void CoreductionAlgorithm<StrategyT>::addCellsToProcess(const Cell& sourceFace) {
   // Finally, put all present cofaces of the source face
   // into the queue
-  for (typename SComplex::ColoredIterators::Iterators::CbdCells::iterator cbdn = s.template iterators<1>().cbdCells(sourceFace).begin(),
-			end = s.template iterators<1>().cbdCells(sourceFace).end(); cbdn != end; ++cbdn) {
-	 if(cbdn->getColor() == 1) cellsToProcess.push_back(*cbdn);
+  for (typename SComplex::ColoredIterators::Iterators::CbdCells::iterator cbdn = strategy->getComplex().template iterators<1>().cbdCells(sourceFace).begin(),
+			end = strategy->getComplex().template iterators<1>().cbdCells(sourceFace).end(); cbdn != end; ++cbdn) {
+	 if (! StrategyT::reduced(*cbdn)) {
+		cellsToProcess.push_back(*cbdn);
+	 }
   }
 }
 
 template<typename SComplex>
 inline void ShaveAlgorithm<SComplex>::operator()(){
 
+  //Cell face(s);
   Cell face(s);
   for(int d=embeddingDim-1;d>=0;--d){
 	 typedef typename SComplex::ColoredIterators::Iterators::DimCells::iterator DimIt;
@@ -216,11 +252,28 @@ inline void ShaveAlgorithm<SComplex>::operator()(){
 	 for (DimIt it = s.template iterators<1>().dimCells(d).begin(),
 			  end = s.template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
-		boost::optional<Cell> face = s.getUniqueCoFace(*it);
-		if (face) {
-		  face->template setColor<2>();
+
+		// boost::optional<Cell> face = s.getUniqueCoFace(*it);
+		// if (face) {
+		//   //if (s.getUniqueCoFace(*it, face)) {
+		//   face->template setColor<2>();
+		//   it->template setColor<2>();
+		// }
+		if (s.getUniqueCoFace(*it, face)) {
+		  face.template setColor<2>();
 		  it->template setColor<2>();
 		}
+		// if (it->getFaceCompanion(face)) {
+		//   face.template setColor<2>();
+		//   it->template setColor<2>();
+		// }
+
+		// boost::optional<Cell> face = it->getUniqueCoFace(s);
+		// if (face) {
+		//   face->template setColor<2>();
+		//   it->template setColor<2>();
+		// }
+		
 	 }
   }
 }

@@ -258,7 +258,6 @@ inline void CoreductionAlgorithm<StrategyT>::addCellsToProcess(const Cell& sourc
 template<typename StrategyT>
 inline void ShaveAlgorithm<StrategyT>::operator()(){
 
-  Cell face(strategy->getComplex());
   for(int d=embeddingDim-1;d>=0;--d){
 	 typedef typename SComplex::ColoredIterators::Iterators::DimCells::iterator DimIt;
 
@@ -266,7 +265,8 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 			  end = strategy->getComplex().template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
 
-		if (strategy->getComplex().getUniqueCoFace(*it, face)) {
+		boost::optional<Cell> face = strategy->getUniqueCoFace(*it);
+		if (face) {
 		  face.template setColor<2>();
 		  it->template setColor<2>();
 		}

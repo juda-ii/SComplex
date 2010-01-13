@@ -127,18 +127,33 @@ public:
 };
 
 
-template<typename SComplex>
+template<typename StrategyT>
 class ShaveAlgorithm {
 
 public:
-  
+  typedef StrategyT Strategy;  
+  typedef typename Strategy::SComplex SComplex;
   typedef typename SComplex::Cell Cell;
 
-  ShaveAlgorithm(SComplex& _s): s(_s) {}
+  ShaveAlgorithm(Strategy* _strategy): strategy(_strategy) {}
+
+  ~ShaveAlgorithm() {
+	 delete strategy;
+  }
+
   void operator()();
 
 private:
-  SComplex& s;
+  Strategy* strategy;
+};
+
+class ShaveAlgorithmFactory {
+
+public:
+  template<typename SComplex>
+  static ShaveAlgorithm<DefaultCoreductionStrategy<SComplex> > createDefault(SComplex& s) {
+	 return ShaveAlgorithm<DefaultCoreductionStrategy<SComplex> >(new DefaultCoreductionStrategy<SComplex>(s));
+  }
 };
 
 template<typename SComplex, typename FCComplex_P, typename SourceGenerator_P>
@@ -240,39 +255,21 @@ inline void CoreductionAlgorithm<StrategyT>::addCellsToProcess(const Cell& sourc
   }
 }
 
-template<typename SComplex>
-inline void ShaveAlgorithm<SComplex>::operator()(){
+template<typename StrategyT>
+inline void ShaveAlgorithm<StrategyT>::operator()(){
 
-  //Cell face(s);
-  Cell face(s);
+  Cell face(strategy->getComplex());
   for(int d=embeddingDim-1;d>=0;--d){
 	 typedef typename SComplex::ColoredIterators::Iterators::DimCells::iterator DimIt;
 
-	 for (DimIt it = s.template iterators<1>().dimCells(d).begin(),
-			  end = s.template iterators<1>().dimCells(d).end();
+	 for (DimIt it = strategy->getComplex().template iterators<1>().dimCells(d).begin(),
+			  end = strategy->getComplex().template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
 
-		// boost::optional<Cell> face = s.getUniqueCoFace(*it);
-		// if (face) {
-		//   //if (s.getUniqueCoFace(*it, face)) {
-		//   face->template setColor<2>();
-		//   it->template setColor<2>();
-		// }
-		if (s.getUniqueCoFace(*it, face)) {
+		if (strategy->getComplex().getUniqueCoFace(*it, face)) {
 		  face.template setColor<2>();
 		  it->template setColor<2>();
 		}
-		// if (it->getFaceCompanion(face)) {
-		//   face.template setColor<2>();
-		//   it->template setColor<2>();
-		// }
-
-		// boost::optional<Cell> face = it->getUniqueCoFace(s);
-		// if (face) {
-		//   face->template setColor<2>();
-		//   it->template setColor<2>();
-		// }
-		
 	 }
   }
 }

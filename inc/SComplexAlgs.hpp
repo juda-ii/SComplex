@@ -262,9 +262,11 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 			  end = strategy->getComplex().template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
 
-		boost::optional<Cell&> face = strategy->getUniqueCoFace(*it);
+		Cell& cell = *it;
+		boost::optional<Cell&> face = strategy->getUniqueCoFace(cell);
 		if (face) {
-		  strategy->reduce(*it, face);
+		  strategy->reduce(cell);
+		  strategy->reduce(*face);
 		}
 	 }
   }

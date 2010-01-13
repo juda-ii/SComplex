@@ -69,14 +69,11 @@ public:
 	 }
   }
 
-  boost::optional<Cell> getUniqueCoFace(const Cell& cell) {
-	 Cell face(complex);
-	 // if (complex.getUniqueCoFace(cell, dummyCell2)) {
-	 // 	return boost::optional<Cell&>(dummyCell2);
-	 if (complex.getUniqueCoFace(cell, face)) {
-		return boost::optional<Cell>(face);
+  boost::optional<Cell&> getUniqueCoFace(const Cell& cell) {
+	 if (complex.getUniqueCoFace(cell, dummyCell2)) {
+	  	return boost::optional<Cell&>(dummyCell2);
 	 } else {
-		return boost::optional<Cell>();
+		return boost::optional<Cell&>();
 	 }
   }
 
@@ -265,7 +262,7 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 			  end = strategy->getComplex().template iterators<1>().dimCells(d).end();
 			it != end; ++it) {
 
-		boost::optional<Cell> face = strategy->getUniqueCoFace(*it);
+		boost::optional<Cell&> face = strategy->getUniqueCoFace(*it);
 		if (face) {
 		  face->template setColor<2>();
 		  it->template setColor<2>();

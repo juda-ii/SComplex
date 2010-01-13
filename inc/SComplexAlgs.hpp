@@ -16,8 +16,7 @@ public:
   //typedef std::pair<boost::reference_wrapper<Cell>, boost::reference_wrapper<Cell> > CoreductionPair;
   typedef std::pair<Cell, Cell> CoreductionPair;
 
-  DefaultCoreductionStrategy(SComplex& _complex): complex(_complex) {}
-																  //, dummyCell1(_complex), dummyCell2(_complex),  dummyCell3(_complex) {}
+  DefaultCoreductionStrategy(SComplex& _complex): complex(_complex), dummyCell1(_complex), dummyCell2(_complex),  dummyCell3(_complex) {}
   
   SComplex& getComplex() const {
 	 return complex;
@@ -44,27 +43,15 @@ public:
 	 cell.template setColor<2>();
   }
   
-  boost::optional<Cell> extract() {
+  boost::optional<Cell&> extract() {
 	 typename SComplex::ColoredIterators::Iterators::DimCells::iterator end = complex.iterators(1).dimCells(0).end(),
 		it = complex.iterators(1).dimCells(0).begin();
 
-	 if (it != end) { // iterator has to be only on not reduced, check it
-		if (!reduced(*it)) {
-		  // dummyCell1 = *it;
-		  // return dummyCell1;
-		  return *it;
-		}
+	 if (it != end) { 
+		dummyCell1 = *it;
+		return dummyCell1;
 	 }
-
-	 // while (it != end) { // iterator has to be only on not reduced, check it
-	 // 	if (!reduced(*it)) {
-	 // 	  dummyCell1 = *it;
-	 // 	  return dummyCell1;
-	 // 	}
-	 // 	++it;
-	 // }
-	 
-	 return boost::optional<Cell>();	 
+	 return boost::optional<Cell&>();	 
   }
   
   boost::optional<CoreductionPair> forceCoreductionPair() {
@@ -95,7 +82,7 @@ public:
 
 private:
   SComplex& complex;
-  //  Cell dummyCell1, dummyCell2, dummyCell3;
+  Cell dummyCell1, dummyCell2, dummyCell3;
 };
 
 template<typename StrategyT>
@@ -226,7 +213,7 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 		// a homology generator like in the case of a vertex in
 		// a compact set, we just pick up such a cell and
 		// remove it from the complex
-		boost::optional<Cell> sourceFace = strategy->extract();
+		boost::optional<Cell&> sourceFace = strategy->extract();
 
 		if(sourceFace){
 		  strategy->reduce(*sourceFace);

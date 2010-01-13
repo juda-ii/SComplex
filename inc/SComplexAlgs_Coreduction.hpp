@@ -14,7 +14,7 @@ public:
   typedef typename Strategy::CoreductionPair CoreductionPair;
 
   
-  CoreductionAlgorithm(Strategy* _strategy): strategy(_strategy), dummyCell1(_strategy->getComplex()), dummyCell2(_strategy->getComplex()) {}
+  CoreductionAlgorithm(Strategy* _strategy): strategy(_strategy), dummyCell1(_strategy->getComplex()) {}
 
   ~CoreductionAlgorithm() {
 	 delete strategy;
@@ -34,7 +34,7 @@ private:
   
   std::vector<Cell> collectedHomGenerators;
   std::deque<Cell> cellsToProcess;
-  Cell dummyCell1, dummyCell2;
+  Cell dummyCell1;
 };
 
 class CoreductionAlgorithmFactory {
@@ -58,15 +58,16 @@ template<typename StrategyT>
 inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair> CoreductionAlgorithm<StrategyT>::getNextPair() {
   
   while (! cellsToProcess.empty() ) {
-	 Cell& coface=cellsToProcess.front();
+	 Cell& cell = cellsToProcess.front();
 	 
-	 if (! strategy->reduced(coface)) {
-		boost::optional<CoreductionPair> coreductionPair = strategy->getCoreductionPair(coface);
+	 if (! strategy->reduced(cell)) {
+		dummyCell1 = cell;
+		boost::optional<CoreductionPair> coreductionPair = strategy->getCoreductionPair(dummyCell1);
 		if (coreductionPair) {		
 		  cellsToProcess.pop_front();	 
 		  return coreductionPair;
 		} else {
-		  addCellsToProcess(coface);
+		  addCellsToProcess(cell);
 		}
 	 }
 	 cellsToProcess.pop_front();	 

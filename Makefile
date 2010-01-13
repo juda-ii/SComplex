@@ -40,8 +40,8 @@ BOOST_FLAGS= -DBOOST_TEST_DYN_LINK
 DEPEND_FLAGS=$(CFLAGS) $(LOCAL_INC_PATHS) $(BOOST_FLAGS)
 WARNINGS= -Wall
 # -Winline -Wdisabled-optimization
-#OPT_FLAGS=-O2 -finline-functions -finline-limit=100000 --param large-function-growth=100000 --param inline-unit-growth=100000
-OPT_FLAGS=-O2
+OPT_FLAGS=-O2 -finline-functions -finline-limit=100000 --param large-function-growth=100000 --param inline-unit-growth=100000
+#OPT_FLAGS=-O2
 PROJECT_FLAGS= $(WARNINGS) -pedantic $(OPT_FLAGS)
 COMP_FLAGS=$(CFLAGS) $(DEBUG) $(PROJECT_FLAGS) $(INC_PATHS) $(BOOST_FLAGS) 
 

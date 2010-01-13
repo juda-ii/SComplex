@@ -23,24 +23,24 @@ public:
 	 return complex;
   }
   
-  static CoreductionPair coreductionPair(Cell& a, Cell& b) {
+  CoreductionPair coreductionPair(Cell& a, Cell& b) {
 	 BOOST_ASSERT(a.getDim() == b.getDim() + 1);
 	 //return std::make_pair(boost::ref(a), boost::ref(b));
 	 return std::make_pair(a, b);
   }
 
-  static bool reduced(const Cell& cell) {
+  bool reduced(const Cell& cell) {
 	 return cell.getColor() == 2;
   }
 
-  static void reduce(CoreductionPair& nextPair) {
+  void reduce(CoreductionPair& nextPair) {
 	 // boost::unwrap_ref(nextPair.first).template setColor<2>();
 	 // boost::unwrap_ref(nextPair.second).template setColor<2>();
 	 nextPair.first.template setColor<2>();
 	 nextPair.second.template setColor<2>();	 	 
   }
 
-  static void reduce(Cell& cell) {
+  void reduce(Cell& cell) {
 	 cell.template setColor<2>();
   }
   
@@ -182,11 +182,11 @@ inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair
 	 cellsToProcess.pop_front();	 
 	 //boost::optional<CoreductionPair> result;
 	 
-	 if (! StrategyT::reduced(coface)) {
+	 if (! strategy->reduced(coface)) {
 		Cell face(strategy->getComplex());
 		if (strategy->getComplex().getUniqueFace(coface, face)) {		
 		  //dummyCell1 = coface;
-		  return StrategyT::coreductionPair(coface, face);
+		  return strategy->coreductionPair(coface, face);
 		} else {
 		  addCellsToProcess(coface);
 		}
@@ -212,7 +212,7 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 	 boost::optional<CoreductionPair> nextPair = getNextPair();
 	 
 	 if (nextPair) {
-		StrategyT::reduce(*nextPair);		
+		strategy->reduce(*nextPair);		
 		++cnt;++cnt;
 
 		Cell& first = boost::unwrap_ref(nextPair->first);
@@ -229,7 +229,7 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 		boost::optional<Cell> sourceFace = strategy->extract();
 
 		if(sourceFace){
-		  StrategyT::reduce(*sourceFace);
+		  strategy->reduce(*sourceFace);
 		  ++cnt;
 		  addCellsToProcess(*sourceFace);		  
 		  storeGenerator(*sourceFace);
@@ -248,7 +248,7 @@ inline void CoreductionAlgorithm<StrategyT>::addCellsToProcess(const Cell& sourc
   // into the queue
   for (typename SComplex::ColoredIterators::Iterators::CbdCells::iterator cbdn = strategy->getComplex().template iterators<1>().cbdCells(sourceFace).begin(),
 			end = strategy->getComplex().template iterators<1>().cbdCells(sourceFace).end(); cbdn != end; ++cbdn) {
-	 if (! StrategyT::reduced(*cbdn)) {
+	 if (! strategy->reduced(*cbdn)) {
 		cellsToProcess.push_back(*cbdn);
 	 }
   }

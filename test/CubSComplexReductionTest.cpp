@@ -46,7 +46,7 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
 
   Stopwatch swComp,swRed;
 
-  (ShaveAlgorithm<CubSComplex>(SComplexCR()))();  
+  (ShaveAlgorithmFactory::createDefault(SComplexCR()))();  
   cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
   get<1>(result) = SComplexCR().cardinality();
   

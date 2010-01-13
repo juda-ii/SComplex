@@ -124,11 +124,11 @@ public:
 		  return cCell;
 	 }
 protected:
-  Cell cCell;
   const Cell& center;
   int i;
-  const int dim;
   bool downDir;
+  const int dim;
+  Cell cCell;
 
 };
 

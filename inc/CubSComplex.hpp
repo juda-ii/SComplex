@@ -80,9 +80,9 @@ public:
   template<Color color>
   typename ColoredConstIterators::Color<color>::Iterators iterators() const;
 
-  bool getUniqueCoFace(Cell& cell, Cell& coface) const;
+  bool getUniqueCoFace(const Cell& cell, Cell& coface) const;
 
-  bool getUniqueFace(Cell& cell, Cell& coface) const;
+  bool getUniqueFace(const Cell& cell, Cell& coface) const;
   
   Dim getBaseDimension() const;
 
@@ -154,16 +154,16 @@ inline CubSComplex::ColoredConstIterators::Color<1>::Iterators CubSComplex::iter
   return ColoredConstIterators::Color<1>::Iterators(*this);
 }
 
-inline bool CubSComplex::getUniqueCoFace(Cell& cell, Cell& coface) const {
-  if (bCubCellSetCR().isFreeFace(cell, coface)) {
+inline bool CubSComplex::getUniqueCoFace(const Cell& cell, Cell& coface) const {
+  if (bCubCellSetCR().isFreeFace(const_cast<Cell&>(cell), coface)) {
 	 return true;
   } else {
 	 return false;
   }
 }
 
-inline bool CubSComplex::getUniqueFace( Cell& cell, Cell& coface) const {
-  if (bCubCellSetCR().isFreeCoFace(cell, coface)) {
+inline bool CubSComplex::getUniqueFace(const Cell& cell, Cell& coface) const {
+  if (bCubCellSetCR().isFreeCoFace(const_cast<Cell&>(cell), coface)) {
 	 return true;
   } else {
 	 return false;

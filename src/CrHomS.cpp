@@ -40,7 +40,7 @@ void CrHomS(int argc,char* argv[]){
 
 
   Stopwatch swComp,swRed;
-  (ShaveAlgorithm<CubSComplex>(SComplexCR()))();  
+  (ShaveAlgorithmFactory::createDefault(SComplexCR()))();  
   cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
   
   Stopwatch swCoRed;

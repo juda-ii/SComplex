@@ -21,8 +21,9 @@ APP_LIBS = -lcapd -lSComplex
 
 TEST_APP_NAME=CubSComplexTest
 TEST_SRCS = test/CubSComplexReductionTest.cpp \
-	test/CubSComplexIteratorsTest.cpp \
 	test/CubSComplexTestMain.cpp
+#	test/CubSComplexIteratorsTest.cpp \
+
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
 TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
@@ -34,7 +35,7 @@ CC=g++
 
 DEBUG_ON= -g
 DEBUG_OFF=-DBOOST_DISABLE_ASSERTS
-DEBUG= -g $(DEBUG_OFF) 
+DEBUG= $(DEBUG_ON) 
 BOOST_FLAGS= -DBOOST_TEST_DYN_LINK
 DEPEND_FLAGS=$(CFLAGS) $(LOCAL_INC_PATHS) $(BOOST_FLAGS)
 WARNINGS= -Wall
@@ -81,6 +82,14 @@ src/CrHomS.o: ./inc/CubSComplex_IteratorProvider.hpp
 src/CrHomS.o: ./inc/CubSComplex_Iterators.hpp
 src/CrHomS.o: ./inc/CubSComplex_ColoredIterators.hpp
 src/CrHomS.o: ./inc/CubSComplex_Numerators.hpp ./inc/SComplexAlgs.hpp
+src/CrHomS.o: ./inc/SComplexAlgs_Coreduction.hpp
+src/CrHomS.o: ./inc/SComplexAlgs_DefaultReduceStrategy.hpp
+src/CrHomS.o: ./inc/SComplexAlgs_Shave.hpp
+src/CubSComplex_Cell.o: ./inc/CubSComplex.hpp ./inc/CubSComplex_Cell.hpp
+src/CubSComplex_Cell.o: ./inc/CubSComplex_IteratorProvider.hpp
+src/CubSComplex_Cell.o: ./inc/CubSComplex_Iterators.hpp
+src/CubSComplex_Cell.o: ./inc/CubSComplex_ColoredIterators.hpp
+src/CubSComplex_Cell.o: ./inc/CubSComplex_Numerators.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_Cell.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_IteratorProvider.hpp
@@ -88,9 +97,6 @@ test/CubSComplexReductionTest.o: ./inc/CubSComplex_Iterators.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_ColoredIterators.hpp
 test/CubSComplexReductionTest.o: ./inc/CubSComplex_Numerators.hpp
 test/CubSComplexReductionTest.o: ./inc/SComplexAlgs.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Cell.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_IteratorProvider.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Iterators.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_ColoredIterators.hpp
-test/CubSComplexIteratorsTest.o: ./inc/CubSComplex_Numerators.hpp
+test/CubSComplexReductionTest.o: ./inc/SComplexAlgs_Coreduction.hpp
+test/CubSComplexReductionTest.o: ./inc/SComplexAlgs_DefaultReduceStrategy.hpp
+test/CubSComplexReductionTest.o: ./inc/SComplexAlgs_Shave.hpp

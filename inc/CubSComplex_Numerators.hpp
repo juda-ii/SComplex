@@ -127,8 +127,9 @@ protected:
   Cell cCell;
   const Cell& center;
   int i;
-  bool downDir;
   const int dim;
+  bool downDir;
+
 };
 
 

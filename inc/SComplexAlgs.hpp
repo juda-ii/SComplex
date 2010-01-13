@@ -168,11 +168,11 @@ inline boost::optional<typename CoreductionAlgorithm<StrategyT>::CoreductionPair
 	 //boost::optional<CoreductionPair> result;
 	 
 	 if (! strategy->reduced(coface)) {
-		Cell face(strategy->getComplex());
-		if (strategy->getComplex().getUniqueFace(coface, face)) {		
+		boost::optional<Cell> face = strategy->getUniqueFace(coface);
+		if (face) {		
 		  //dummyCell1 = coface;
 		  cellsToProcess.pop_front();	 
-		  return strategy->coreductionPair(coface, face);
+		  return strategy->coreductionPair(coface, *face);
 		} else {
 		  addCellsToProcess(coface);
 		}

@@ -267,7 +267,7 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 
 		boost::optional<Cell> face = strategy->getUniqueCoFace(*it);
 		if (face) {
-		  face.template setColor<2>();
+		  face->template setColor<2>();
 		  it->template setColor<2>();
 		}
 	 }

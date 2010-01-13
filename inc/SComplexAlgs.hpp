@@ -28,11 +28,6 @@ public:
 	 return std::make_pair(boost::ref(a), boost::ref(b));
   }
 
-  ReductionPair reductionPair(Cell& a, Cell& b) const {
-	 BOOST_ASSERT(a.getDim() + 1 == b.getDim());
-	 return std::make_pair(boost::ref(a), boost::ref(b));
-  }
-
   bool reduced(const Cell& cell) const {
 	 return cell.getColor() == 2;
   }
@@ -75,11 +70,11 @@ public:
 	 }
   }
 
-  boost::optional<Cell&> getUniqueCoFace(const Cell& cell) {
+  boost::optional<ReductionPair> getReductionPair(Cell& cell) {
 	 if (complex.getUniqueCoFace(cell, dummyCell2)) {
-	  	return boost::optional<Cell&>(dummyCell2);
+	  	return std::make_pair(boost::ref(cell), boost::ref(dummyCell2));
 	 } else {
-		return boost::optional<Cell&>();
+		return boost::optional<ReductionPair>();
 	 }
   }
 
@@ -93,6 +88,7 @@ class CoreductionAlgorithm {
 
 public:
   typedef StrategyT Strategy;
+
   typedef typename Strategy::SComplex SComplex;
   typedef typename Strategy::Cell Cell;
   typedef typename Strategy::CoreductionPair CoreductionPair;
@@ -137,7 +133,8 @@ public:
   typedef StrategyT Strategy;  
   typedef typename Strategy::SComplex SComplex;
   typedef typename SComplex::Cell Cell;
-
+  typedef typename Strategy::ReductionPair ReductionPair;
+  
   ShaveAlgorithm(Strategy* _strategy): strategy(_strategy) {}
 
   ~ShaveAlgorithm() {
@@ -269,9 +266,9 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 			it != end; ++it) {
 
 		Cell& cell = *it;
-		boost::optional<Cell&> coface = strategy->getUniqueCoFace(cell);
-		if (coface) {
-		  strategy->coreduce(strategy->coreductionPair(cell, *coface));
+		boost::optional<ReductionPair> reductionPair = strategy->getReductionPair(cell);
+		if (reductionPair) {
+		  strategy->reduce(*reductionPair);
 		}
 	 }
   }

@@ -13,8 +13,9 @@ class DefaultCoreductionStrategy {
 public:
   typedef SComplexT SComplex;
   typedef typename SComplex::Cell Cell;
-  //typedef std::pair<boost::reference_wrapper<Cell>, boost::reference_wrapper<Cell> > CoreductionPair;
-  typedef std::pair<Cell, Cell> CoreductionPair;
+  typedef std::pair<boost::reference_wrapper<Cell>, boost::reference_wrapper<Cell> > CoreductionPair;
+  typedef std::pair<boost::reference_wrapper<Cell>, boost::reference_wrapper<Cell> > ReductionPair;  
+
 
   DefaultCoreductionStrategy(SComplex& _complex): complex(_complex), dummyCell1(_complex), dummyCell2(_complex),  dummyCell3(_complex) {}
   
@@ -22,21 +23,28 @@ public:
 	 return complex;
   }
   
-  CoreductionPair coreductionPair(Cell& a, Cell& b) {
-	 BOOST_ASSERT(a.getDim() == b.getDim() + 1);
-	 //return std::make_pair(boost::ref(a), boost::ref(b));
-	 return std::make_pair(a, b);
+  CoreductionPair coreductionPair(Cell& a, Cell& b) const {
+	 BOOST_ASSERT(a.getDim() + 1 == b.getDim());
+	 return std::make_pair(boost::ref(a), boost::ref(b));
   }
 
-  bool reduced(const Cell& cell) {
+  ReductionPair reductionPair(Cell& a, Cell& b) const {
+	 BOOST_ASSERT(a.getDim() + 1 == b.getDim());
+	 return std::make_pair(boost::ref(a), boost::ref(b));
+  }
+
+  bool reduced(const Cell& cell) const {
 	 return cell.getColor() == 2;
   }
 
-  void reduce(CoreductionPair& nextPair) {
-	 // boost::unwrap_ref(nextPair.first).template setColor<2>();
-	 // boost::unwrap_ref(nextPair.second).template setColor<2>();
-	 nextPair.first.template setColor<2>();
-	 nextPair.second.template setColor<2>();	 	 
+  void coreduce(const CoreductionPair& coRedPair) const {
+	 boost::unwrap_ref(coRedPair.first).template setColor<2>();
+	 boost::unwrap_ref(coRedPair.second).template setColor<2>();
+  }
+
+  void reduce(const ReductionPair& redPair) const {
+	 boost::unwrap_ref(redPair.first).template setColor<2>();
+	 boost::unwrap_ref(redPair.second).template setColor<2>();
   }
 
   void reduce(Cell& cell) {
@@ -60,8 +68,6 @@ public:
 
   boost::optional<Cell> getUniqueFace(const Cell& cell) {
 	 Cell face(complex);
-	 // if (complex.getUniqueFace(cell, dummyCell2)) {
-	 // 	return boost::optional<Cell&>(dummyCell2);
 	 if (complex.getUniqueFace(cell, face)) {
 		return boost::optional<Cell>(face);
 	 } else {
@@ -210,7 +216,7 @@ inline int CoreductionAlgorithm<StrategyT>::operator()(){
 	 boost::optional<CoreductionPair> nextPair = getNextPair();
 	 
 	 if (nextPair) {
-		strategy->reduce(*nextPair);		
+		strategy->coreduce(*nextPair);		
 		++cnt;++cnt;
 
 		Cell& first = boost::unwrap_ref(nextPair->first);
@@ -263,10 +269,9 @@ inline void ShaveAlgorithm<StrategyT>::operator()(){
 			it != end; ++it) {
 
 		Cell& cell = *it;
-		boost::optional<Cell&> face = strategy->getUniqueCoFace(cell);
-		if (face) {
-		  strategy->reduce(cell);
-		  strategy->reduce(*face);
+		boost::optional<Cell&> coface = strategy->getUniqueCoFace(cell);
+		if (coface) {
+		  strategy->coreduce(strategy->coreductionPair(cell, *coface));
 		}
 	 }
   }

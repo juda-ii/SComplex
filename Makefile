@@ -14,6 +14,11 @@ APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
 TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
 
+TEST_OUTPUT_FORMAT=HRF
+TEST_LOG_LEVEL=message
+TEST_REPORT_LEVEL=short
+
+
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
 
@@ -84,7 +89,7 @@ libs: init $(LIBS_DIR)/$(LIB_NAME)
 apps: init $(BINS_DIR)/$(APP_NAME)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
-	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib TEST_REPORT_OUTPUT=$(TEST_RESULT_XML) $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=XML --log_level=all --report_level=no)
+	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL))
 
 $(OBJS_DIR)/%.o: %.cpp
 	@echo $(CC) $<

@@ -1,4 +1,4 @@
-#include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp"
+#include <capd/matrixAlgorithms/intMatrixAlgorithms.hpp>
 
 #include "CubSComplex.hpp"
 

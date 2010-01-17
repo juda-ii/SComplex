@@ -14,8 +14,8 @@ APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
 
 TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
-#CCCC_DIR=$(RUN_DIR)/cccc
-CCCC_DIR=.cccc
+CCCC_DIR=$(RUN_DIR)/cccc
+CPPCHECK_OUTPUT=$(RUN_DIR)/cppcheck.xml
 
 TEST_OUTPUT_FORMAT=HRF
 TEST_LOG_LEVEL=message
@@ -34,8 +34,6 @@ LIB_SRCS = $(SRCS_DIR)/CubSComplex_Cell.cpp
 APP_SRCS = $(SRCS_DIR)/CrHomS.cpp
 H_SRCS = 
 
-ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(H_SRCS)
-
 
 LIB_OBJS = $(LIB_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 APP_OBJS = $(APP_SRCS:%.cpp=$(OBJS_DIR)/%.o)
@@ -52,6 +50,8 @@ TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 
 TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
 
+
+ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(TEST_SRCS) $(H_SRCS)
 
 MKDIR=mkdir
 CC=g++
@@ -103,6 +103,9 @@ test: init $(BINS_DIR)/$(TEST_APP_NAME)
 
 cccc: init $(ALL_SRCS)
 	cccc --outdir=$(CCCC_DIR) $(ALL_SRCS)
+
+cppcheck: $(ALL_SRCS)
+	@cppcheck -v --enable=all $(LOCAL_INC_PATHS) --xml $(ALL_SRCS) 2> $(CPPCHECK_OUTPUT)
 
 $(OBJS_DIR)/%.o: %.cpp
 	@echo $(CC) $<

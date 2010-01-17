@@ -17,7 +17,8 @@ public:
   CoreductionAlgorithm(Strategy* _strategy): strategy(_strategy), dummyCell1(_strategy->getComplex()) {}
 
   ~CoreductionAlgorithm() {
-	 delete strategy;
+	 if (strategy)
+		delete strategy;
   }
   
   int operator()();

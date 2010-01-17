@@ -21,8 +21,8 @@ APP_LIBS = -lcapd -lSComplex
 
 TEST_APP_NAME=CubSComplexTest
 TEST_SRCS = test/CubSComplexReductionTest.cpp \
-	test/CubSComplexTestMain.cpp
-#	test/CubSComplexIteratorsTest.cpp \
+	test/CubSComplexTestMain.cpp \
+	test/CubSComplexIteratorsTest.cpp \
 
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 
@@ -40,8 +40,8 @@ BOOST_FLAGS= -DBOOST_TEST_DYN_LINK
 DEPEND_FLAGS=$(CFLAGS) $(LOCAL_INC_PATHS) $(BOOST_FLAGS)
 WARNINGS= -Wall
 # -Winline -Wdisabled-optimization
-OPT_FLAGS=-O2 -finline-functions -finline-limit=100000 --param large-function-growth=100000 --param inline-unit-growth=100000
-#OPT_FLAGS=-O2
+#OPT_FLAGS=-O2 -finline-functions -finline-limit=100000 --param large-function-growth=100000 --param inline-unit-growth=100000
+OPT_FLAGS=-O2
 PROJECT_FLAGS= $(WARNINGS) -pedantic $(OPT_FLAGS)
 COMP_FLAGS=$(CFLAGS) $(DEBUG) $(PROJECT_FLAGS) $(INC_PATHS) $(BOOST_FLAGS) 
 
@@ -64,7 +64,7 @@ $(APP_NAME): $(APP_OBJS) $(LIB_NAME)
 $(TEST_APP_NAME): $(TEST_OBJS)
 	$(CC) -o $(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
 
-test_exec: $(TEST_APP_NAME)
+test: $(TEST_APP_NAME)
 	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib ./$(TEST_APP_NAME))
 
 

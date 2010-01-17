@@ -84,7 +84,7 @@ libs: init $(LIBS_DIR)/$(LIB_NAME)
 apps: init $(BINS_DIR)/$(APP_NAME)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
-	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib TEST_REPORT_OUTPUT=$(TEST_RESULT_XML) $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --log_level=message --report_format=XML)
+	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib TEST_REPORT_OUTPUT=$(TEST_RESULT_XML) $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --log_level=all --report_format=XML --report_level=detailed )
 
 $(OBJS_DIR)/%.o: %.cpp
 	@echo $(CC) $<

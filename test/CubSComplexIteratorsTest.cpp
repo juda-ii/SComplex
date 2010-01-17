@@ -20,6 +20,7 @@ using namespace std;
 
 #include <CubSComplex.hpp>
 
+BOOST_AUTO_TEST_SUITE(CubSComplex_iterators)
 
 BOOST_AUTO_TEST_CASE(iterators_AllCells_init_test) {
 	 CubSComplex s(readCubCellSet<BCubSet,BCubCelSet>("test/input_1.bmd"));
@@ -68,3 +69,5 @@ BOOST_AUTO_TEST_CASE(iterators_AllCells_forEach_test) {
 	 std::for_each(s.iterators(1).allCells().begin(), s.iterators(1).allCells().end(), boost::lambda::var(cnt)++);
 	 BOOST_CHECK_EQUAL(cnt, initSize);	 
 }
+
+BOOST_AUTO_TEST_SUITE_END()

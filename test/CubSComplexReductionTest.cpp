@@ -21,6 +21,9 @@ using namespace std;
 #include <CubSComplex.hpp>
 #include <SComplexAlgs.hpp>
 
+BOOST_AUTO_TEST_SUITE(CubSComplex_reductions)
+
+
 typedef ElementaryCell ElementaryCellType;
 typedef int ScalarType;
 typedef FreeModule<int,capd::vectalg::Matrix<int,0,0> > FreeModuleType;
@@ -74,3 +77,5 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
 BOOST_AUTO_TEST_CASE(reduction_test) {
   BOOST_CHECK_EQUAL(CrHomS<CubSComplex>("test/input_1.bmd"), boost::make_tuple(71639264, 817510, 3815, "0,1057"));
 }
+
+BOOST_AUTO_TEST_SUITE_END()

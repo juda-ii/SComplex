@@ -3,6 +3,7 @@ BUILD_DIR=build
 BINS_DIR=$(BUILD_DIR)/bin
 LIBS_DIR=$(BUILD_DIR)/lib
 OBJS_DIR=$(BUILD_DIR)/obj
+RUN_DIR=$(BUILD_DIR)/run
 
 INCS_DIR=inc
 SRCS_DIR=src
@@ -11,13 +12,13 @@ TESTS_DIR=test
 
 APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
-
+TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
 
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
 
 LOCAL_INC_PATHS= -I$(INCS_DIR)  
-INC_PATHS = $(LOCAL_INC_PATHS) -I$(CAPD_HOME)/include -I$(BOOST_HOME)/include
+INC_PATHS = $(LOCAL_INC_PATHS) -isystem$(CAPD_HOME)/include -isystem$(BOOST_HOME)/include
 LIB_PATHS = -L$(LIBS_DIR) -L$(CAPD_HOME)/lib -L$(BOOST_HOME)/lib
 
 
@@ -71,30 +72,37 @@ $(OBJS_DIR):
 	$(MKDIR) $(OBJS_DIR)/$(SRCS_DIR)
 	$(MKDIR) $(OBJS_DIR)/$(TESTS_DIR)
 
+$(RUN_DIR):
+	$(MKDIR) $(RUN_DIR)
+
 all: init libs apps test
 
-init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR)
+init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR)
 
 libs: init $(LIBS_DIR)/$(LIB_NAME)
 
 apps: init $(BINS_DIR)/$(APP_NAME)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
-	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib ./$(BINS_DIR)/$(TEST_APP_NAME))
+	time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib TEST_REPORT_OUTPUT=$(TEST_RESULT_XML) $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --log_level=message --report_format=XML)
 
 $(OBJS_DIR)/%.o: %.cpp
-	$(CC) $(COMP_FLAGS) -c $< -o $@
+	@echo $(CC) $<
+	@$(CC) $(COMP_FLAGS) -c $< -o $@
 
 
 $(LIBS_DIR)/$(LIB_NAME): $(LIB_OBJS)
-	$(AR) rcs $(LIBS_DIR)/$(LIB_NAME) $(LIB_OBJS) 
+	@echo $(AR) $(LIB_NAME)
+	@$(AR) rcs $(LIBS_DIR)/$(LIB_NAME) $(LIB_OBJS) 
 
 $(BINS_DIR)/$(APP_NAME): init libs $(APP_OBJS)
-	$(CC) $(COMP_FLAGS) -o $(APP_NAME) $(APP_OBJS) $(LIB_PATHS) $(APP_LIBS)
+	@echo $(APP_NAME)
+	@$(CC) $(COMP_FLAGS) -o $(APP_NAME) $(APP_OBJS) $(LIB_PATHS) $(APP_LIBS)
 
 
 $(BINS_DIR)/$(TEST_APP_NAME): init libs $(TEST_OBJS)
-	$(CC) -o $(BINS_DIR)/$(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
+	@echo $(TEST_APP_NAME)
+	@$(CC) -o $(BINS_DIR)/$(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
 
 
 clean:

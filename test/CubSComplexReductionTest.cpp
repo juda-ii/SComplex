@@ -34,11 +34,11 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
 	 using boost::tuples::get;
 	 
   Stopwatch swTot;
-  cout << " --- Reading cubical cellular set from  " << fileName  << endl;
+  BOOST_TEST_MESSAGE(" --- Reading cubical cellular set from  " << fileName);
 
   CRef<SComplex> SComplexCR(new SComplex(readCubCellSet<BCubSet,BCubCelSet>(fileName.c_str())));
-  cout << "Successfully read  " << fileName <<
-          " of "  << SComplexCR().cardinality() << " cells " << endl;
+  BOOST_TEST_MESSAGE("Successfully read  " << fileName <<
+							" of "  << SComplexCR().cardinality() << " cells ");
 
   get<0>(result) = SComplexCR().cardinality();
 //  SComplexAlgs<CubSComplex>::test(SComplexCR());
@@ -47,25 +47,25 @@ boost::tuple<int, int, int, std::string>  CrHomS(const std::string &fileName) {
   Stopwatch swComp,swRed;
 
   (ShaveAlgorithmFactory::createDefault(SComplexCR()))();  
-  cout << " --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed <<  endl;
+  BOOST_TEST_MESSAGE(" --- Shave reduced the size to " << SComplexCR().cardinality() << " in " << swRed);
   get<1>(result) = SComplexCR().cardinality();
   
   Stopwatch swCoRed;
 
   (CoreductionAlgorithmFactory::createDefault(SComplexCR()))();
-  cout << " --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed <<  endl;
+  BOOST_TEST_MESSAGE(" --- Coreduction reduced the size to " << SComplexCR().cardinality() << " in " << swCoRed);
   get<2>(result) = SComplexCR().cardinality();
   
   CRef<ReducibleFreeChainComplexType> RFCComplexCR=
 	 (ReducibleFreeChainComplexOverZFromSComplexAlgorithm<CubSComplex, ReducibleFreeChainComplexType,ElementaryCellType>(SComplexCR()))();
-  cout << " --- RFCC constructed  " << endl;
+  BOOST_TEST_MESSAGE(" --- RFCC constructed  ");
 
   CRef<HomologySignature> homSignCR=HomAlgFunctors<FreeModuleType>::homSignViaAR_Random(RFCComplexCR);
-  cout << " --- Computation completed in " << swComp  << std::endl;
-  cout << " --- Computed homology is: \n\n" << homSignCR()  << std::endl;
+  BOOST_TEST_MESSAGE(" --- Computation completed in " << swComp);
+  BOOST_TEST_MESSAGE(" --- Computed homology is: \n\n" << homSignCR());
   get<3>(result) = homSignCR().bettiVector();
   
-  cout << " --- Total computation time is: " << swTot  << std::endl;
+  BOOST_TEST_MESSAGE(" --- Total computation time is: " << swTot);
 
   return result;
 }

@@ -12,7 +12,9 @@ TESTS_DIR=test
 
 APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
+
 TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
+CCCC_DIR=$(RUN_DIR)/cccc
 
 TEST_OUTPUT_FORMAT=HRF
 TEST_LOG_LEVEL=message
@@ -29,6 +31,10 @@ LIB_PATHS = -L$(LIBS_DIR) -L$(CAPD_HOME)/lib -L$(BOOST_HOME)/lib
 
 LIB_SRCS = $(SRCS_DIR)/CubSComplex_Cell.cpp
 APP_SRCS = $(SRCS_DIR)/CrHomS.cpp
+H_SRCS = 
+
+ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(H_SRCS)
+
 
 LIB_OBJS = $(LIB_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 APP_OBJS = $(APP_SRCS:%.cpp=$(OBJS_DIR)/%.o)
@@ -80,9 +86,12 @@ $(OBJS_DIR):
 $(RUN_DIR):
 	$(MKDIR) $(RUN_DIR)
 
+$(CCCC_DIR):
+	$(MKDIR) $(CCCC_DIR)
+
 all: init libs apps test
 
-init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR)
+init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR) $(CCCC_DIR)
 
 libs: init $(LIBS_DIR)/$(LIB_NAME)
 
@@ -90,6 +99,9 @@ apps: init $(BINS_DIR)/$(APP_NAME)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
 	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL))
+
+cccc: init $(ALL_SRCS)
+	cccc --outdir=$(CCCC_DIR) $(ALL_SRCS)
 
 $(OBJS_DIR)/%.o: %.cpp
 	@echo $(CC) $<

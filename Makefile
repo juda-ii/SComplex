@@ -14,7 +14,8 @@ APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
 
 TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
-CCCC_DIR=$(RUN_DIR)/cccc
+#CCCC_DIR=$(RUN_DIR)/cccc
+CCCC_DIR=.cccc
 
 TEST_OUTPUT_FORMAT=HRF
 TEST_LOG_LEVEL=message

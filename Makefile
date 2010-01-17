@@ -32,8 +32,7 @@ LIB_PATHS = -L$(LIBS_DIR) -L$(CAPD_HOME)/lib -L$(BOOST_HOME)/lib
 
 LIB_SRCS = $(SRCS_DIR)/CubSComplex_Cell.cpp
 APP_SRCS = $(SRCS_DIR)/CrHomS.cpp
-H_SRCS = 
-
+H_SRCS= $(shell find $(INCS_DIR) -name '*.hpp' -o -name '*.h')
 
 LIB_OBJS = $(LIB_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 APP_OBJS = $(APP_SRCS:%.cpp=$(OBJS_DIR)/%.o)
@@ -42,10 +41,7 @@ APP_LIBS = -lcapd -lSComplex
 
 
 TEST_APP_NAME=CubSComplexTest
-TEST_SRCS = $(TESTS_DIR)/CubSComplexReductionTest.cpp \
-	$(TESTS_DIR)/CubSComplexTestMain.cpp \
-	$(TESTS_DIR)/CubSComplexIteratorsTest.cpp \
-
+TEST_SRCS = $(shell find $(TESTS_DIR) -name '*.cpp')
 TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 
 TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework

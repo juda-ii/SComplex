@@ -20,7 +20,6 @@ TEST_OUTPUT_FORMAT=HRF
 TEST_LOG_LEVEL=message
 TEST_REPORT_LEVEL=short
 
-
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
 

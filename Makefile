@@ -85,7 +85,7 @@ $(RUN_DIR):
 $(CCCC_DIR):
 	$(MKDIR) $(CCCC_DIR)
 
-all: init libs apps test
+all: init libs apps
 
 init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR) $(CCCC_DIR)
 

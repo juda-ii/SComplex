@@ -1,4 +1,3 @@
-
 BUILD_DIR=build
 BINS_DIR=$(BUILD_DIR)/bin
 LIBS_DIR=$(BUILD_DIR)/lib

@@ -56,7 +56,7 @@ TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
 ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(TEST_SRCS) $(H_SRCS)
 ALL_OBJS = $(LIB_OBJS) $(APP_OBJS) $(TEST_OBJS)
 
-MKDIR=mkdir
+MKDIR=mkdir -p
 CC=g++
 
 DEBUG=-g
@@ -75,28 +75,18 @@ coverage: DEBUG:=$(DEBUG) -fprofile-arcs -ftest-coverage
 
 .PHONY: init depend clean clean-obj libs apps all compile
 
-
-$(BINS_DIR):
+$(BUILD_DIR)/init: 
 	$(MKDIR) $(BINS_DIR)
-
-$(LIBS_DIR):
 	$(MKDIR) $(LIBS_DIR)
-
-$(OBJS_DIR):
 	$(MKDIR) $(OBJS_DIR)
 	$(MKDIR) $(OBJS_DIR)/$(SRCS_DIR)
 	$(MKDIR) $(OBJS_DIR)/$(TESTS_DIR)
-
-$(RUN_DIR):
 	$(MKDIR) $(RUN_DIR)
-
-$(CCCC_DIR):
 	$(MKDIR) $(CCCC_DIR)
-
-$(LCOV_DIR):
 	$(MKDIR) $(LCOV_DIR)
+	touch $(BUILD_DIR)/init
 
-init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR) $(CCCC_DIR) $(LCOV_DIR)
+init: $(BUILD_DIR)/init
 
 all: init libs apps test
 
@@ -104,7 +94,7 @@ libs: init $(LIBS_DIR)/$(LIB_NAME)
 
 apps: init $(BINS_DIR)/$(APP_NAME)
 
-compile: init $(ALL_OBJS)
+compile: $(BUILD_DIR)/init $(ALL_OBJS)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
 	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL))
@@ -125,7 +115,7 @@ coverage: init $(BINS_DIR)/$(TEST_APP_NAME)
 	@genhtml -o $(LCOV_DIR) $(TEST_LCOV_OUTPUT).tmp > /dev/null
 
 
-$(OBJS_DIR)/%.o: %.cpp
+$(OBJS_DIR)/%.o: %.cpp $(BUILD_DIR)/init
 	@echo $(CC) $<
 	@$(CC) $(COMP_FLAGS) -c $< -o $@
 

@@ -7,22 +7,24 @@ RUN_DIR=$(BUILD_DIR)/run
 
 INCS_DIR=inc
 SRCS_DIR=src
-TESTS_DIR=test
-
+TEST_DIR=test
+UNIT_TEST_DIR=$(TEST_DIR)/unit
+PERFORMANCE_TEST_DIR=$(TEST_DIR)/performance
 
 APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
 
-TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
+UNIT_TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
 CCCC_DIR=$(RUN_DIR)/cccc
 CPPCHECK_OUTPUT=$(RUN_DIR)/cppcheck.xml
-TEST_LCOV_OUTPUT=$(LCOV_DIR)/test.info
+UNIT_TEST_LCOV_OUTPUT=$(LCOV_DIR)/test.info
 
 LCOV_DIR=$(RUN_DIR)/lcov
 
 TEST_OUTPUT_FORMAT=HRF
 TEST_LOG_LEVEL=message
 TEST_REPORT_LEVEL=short
+TEST_APP_ARGS=--output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL)
 
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
@@ -42,19 +44,27 @@ APP_OBJS = $(APP_SRCS:%.cpp=$(OBJS_DIR)/%.o)
 APP_LIBS = -lcapd -lSComplex
 
 
-TEST_APP_NAME=CubSComplexTest
-TEST_SRCS = \
-	$(TESTS_DIR)/CubSComplexTestMain.cpp \
-	$(TESTS_DIR)/CubSComplexIteratorsTest.cpp \
-	$(TESTS_DIR)/CubSComplexReductionTest.cpp
+UNIT_TEST_APP_NAME=SComplexUnitTest
+UNIT_TEST_SRCS = \
+	$(UNIT_TEST_DIR)/SComplexUnitTestMain.cpp \
+	$(UNIT_TEST_DIR)/CubSComplexIteratorsTest.cpp \
+	$(UNIT_TEST_DIR)/CubSComplexReductionTest.cpp
+
+UNIT_TEST_OBJS = $(UNIT_TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
+UNIT_TEST_LIBS = $(APP_LIBS)  -lboost_unit_test_framework
 
 
-TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
-TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
+PERFORMANCE_TEST_APP_NAME=SComplexPerformanceTest
+PERFORMANCE_TEST_SRCS = \
+	$(PERFORMANCE_TEST_DIR)/SComplexPerformanceTestMain.cpp \
+	$(PERFORMANCE_TEST_DIR)/CubSComplexCoreductionPerformance.cpp
 
+PERFORMANCE_TEST_OBJS = $(PERFORMANCE_TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
+PERFORMANCE_TEST_LIBS = $(APP_LIBS)  -lboost_unit_test_framework
 
-ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(TEST_SRCS) $(H_SRCS)
-ALL_OBJS = $(LIB_OBJS) $(APP_OBJS) $(TEST_OBJS)
+ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(UNIT_TEST_SRCS) $(PERFORMANCE_TEST_SRCS) $(H_SRCS)
+ALL_OBJS = $(LIB_OBJS) $(APP_OBJS) $(UNIT_TEST_OBJS) $(PERFORMANCE_TEST_OBJS)
+
 
 MKDIR=mkdir -p
 CC=g++
@@ -80,7 +90,8 @@ $(BUILD_DIR)/init:
 	$(MKDIR) $(LIBS_DIR)
 	$(MKDIR) $(OBJS_DIR)
 	$(MKDIR) $(OBJS_DIR)/$(SRCS_DIR)
-	$(MKDIR) $(OBJS_DIR)/$(TESTS_DIR)
+	$(MKDIR) $(OBJS_DIR)/$(UNIT_TEST_DIR)
+	$(MKDIR) $(OBJS_DIR)/$(PERFORMANCE_TEST_DIR)
 	$(MKDIR) $(RUN_DIR)
 	$(MKDIR) $(CCCC_DIR)
 	$(MKDIR) $(LCOV_DIR)
@@ -96,24 +107,27 @@ apps: init $(BINS_DIR)/$(APP_NAME)
 
 compile: $(BUILD_DIR)/init $(ALL_OBJS)
 
-test: init $(BINS_DIR)/$(TEST_APP_NAME)
-	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL))
+test: init $(BINS_DIR)/$(UNIT_TEST_APP_NAME)
+	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(UNIT_TEST_APP_NAME) $(TEST_APP_ARGS))
+
+performance_test: init $(BINS_DIR)/$(PERFORMANCE_TEST_APP_NAME)
+	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(BINS_DIR)/$(PERFORMANCE_TEST_APP_NAME) $(TEST_APP_ARGS))
 
 cccc: init $(ALL_SRCS)
-	cccc --outdir=$(CCCC_DIR) $(ALL_SRCS)
+	@cccc --outdir=$(CCCC_DIR) $(ALL_SRCS)
 
 cppcheck: $(ALL_SRCS)
 	@cppcheck -v --enable=all $(LOCAL_INC_PATHS) --xml $(ALL_SRCS) 2> $(CPPCHECK_OUTPUT)
 
-coverage: init $(BINS_DIR)/$(TEST_APP_NAME)
+coverage: init $(BINS_DIR)/$(UNIT_TEST_APP_NAME)
 	@echo "Init info"
-	@lcov -o $(TEST_LCOV_OUTPUT) -b ./ -c -i -d $(OBJS_DIR) > /dev/null
+	@lcov -o $(UNIT_TEST_LCOV_OUTPUT) -b ./ -c -i -d $(OBJS_DIR) > /dev/null
 	@echo "Run tests"
-	@LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(BINS_DIR)/$(TEST_APP_NAME) > /dev/null
-	@lcov -o $(TEST_LCOV_OUTPUT) -d $(OBJS_DIR) -c -b ./ > /dev/null
-	@lcov -o $(TEST_LCOV_OUTPUT).tmp -d $(OBJS_DIR) -e $(TEST_LCOV_OUTPUT) $(addprefix $(PWD)/, $(ALL_SRCS)) > /dev/null
+	@LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(BINS_DIR)/$(UNIT_TEST_APP_NAME) > /dev/null
+	@lcov -o $(UNIT_TEST_LCOV_OUTPUT) -d $(OBJS_DIR) -c -b ./ > /dev/null
+	@lcov -o $(UNIT_TEST_LCOV_OUTPUT).tmp -d $(OBJS_DIR) -e $(UNIT_TEST_LCOV_OUTPUT) $(addprefix $(PWD)/, $(ALL_SRCS)) > /dev/null
 	@echo "Generate report"
-	@genhtml -o $(LCOV_DIR) $(TEST_LCOV_OUTPUT).tmp > /dev/null
+	@genhtml -o $(LCOV_DIR) $(UNIT_TEST_LCOV_OUTPUT).tmp > /dev/null
 
 
 $(OBJS_DIR)/%.o: %.cpp $(BUILD_DIR)/init
@@ -129,50 +143,22 @@ $(BINS_DIR)/$(APP_NAME): init libs $(APP_OBJS)
 	@echo $(APP_NAME)
 	@$(CC) $(COMP_FLAGS) -o $(APP_NAME) $(APP_OBJS) $(LIB_PATHS) $(APP_LIBS)
 
+$(BINS_DIR)/$(UNIT_TEST_APP_NAME): init libs $(UNIT_TEST_OBJS)
+	@echo $(UNIT_TEST_APP_NAME)
+	@$(CC) $(COMP_FLAGS) -o $(BINS_DIR)/$(UNIT_TEST_APP_NAME) $(LIB_PATHS) $(UNIT_TEST_OBJS) $(UNIT_TEST_LIBS) 
 
-$(BINS_DIR)/$(TEST_APP_NAME): init libs $(TEST_OBJS)
-	@echo $(TEST_APP_NAME)
-	@$(CC) $(COMP_FLAGS) -o $(BINS_DIR)/$(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
+$(BINS_DIR)/$(PERFORMANCE_TEST_APP_NAME): init libs $(PERFORMANCE_TEST_OBJS)
+	@echo $(PERFORMANCE_TEST_APP_NAME)
+	@$(CC) $(COMP_FLAGS) -o $(BINS_DIR)/$(PERFORMANCE_TEST_APP_NAME) $(LIB_PATHS) $(PERFORMANCE_TEST_OBJS) $(PERFORMANCE_TEST_LIBS)
 
-clean-obj:
+clean_obj:
 	$(RM) $(ALL_OBJS)
 
-clean: clean-obj
+clean: clean_obj
 	$(RM) -r $(BUILD_DIR)/*
 
-depend: $(APP_SRCS) $(LIB_SRCS)  $(TEST_SRCS)
-	makedepend  -p$(OBJS_DIR)/ $(LOCAL_INC_PATHS) $^
+depend: $(APP_SRCS) $(LIB_SRCS)  $(UNIT_TEST_SRCS) $(PERFORMANCE_TEST_SRCS)
+	makedepend  -p$(OBJS_DIR)/ $(LOCAL_INC_PATHS) -f Makefile.dep $^
 
-#Bellow are dependencies generated by 'dpend' target (make depend)
-# DO NOT DELETE
+include Makefile.dep
 
-build/objs/src/CrHomS.o: inc/CubSComplex.hpp inc/CubSComplex_Cell.hpp
-build/objs/src/CrHomS.o: inc/CubSComplex_IteratorProvider.hpp
-build/objs/src/CrHomS.o: inc/CubSComplex_Iterators.hpp
-build/objs/src/CrHomS.o: inc/CubSComplex_ColoredIterators.hpp
-build/objs/src/CrHomS.o: inc/CubSComplex_Numerators.hpp inc/SComplexAlgs.hpp
-build/objs/src/CrHomS.o: inc/SComplexAlgs_Coreduction.hpp
-build/objs/src/CrHomS.o: inc/SComplexAlgs_DefaultReduceStrategy.hpp
-build/objs/src/CrHomS.o: inc/SComplexAlgs_Shave.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex_Cell.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex_IteratorProvider.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex_Iterators.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex_ColoredIterators.hpp
-build/objs/src/CubSComplex_Cell.o: inc/CubSComplex_Numerators.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex_Cell.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex_IteratorProvider.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex_Iterators.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex_ColoredIterators.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/CubSComplex_Numerators.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/SComplexAlgs.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/SComplexAlgs_Coreduction.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/SComplexAlgs_DefaultReduceStrategy.hpp
-build/objs/test/CubSComplexReductionTest.o: inc/SComplexAlgs_Shave.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex_Cell.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex_IteratorProvider.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex_Iterators.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex_ColoredIterators.hpp
-build/objs/test/CubSComplexIteratorsTest.o: inc/CubSComplex_Numerators.hpp

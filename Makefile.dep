@@ -1,0 +1,42 @@
+# DO NOT DELETE
+
+build/obj/src/CrHomS.o: inc/CubSComplex.hpp inc/CubSComplex_Cell.hpp
+build/obj/src/CrHomS.o: inc/CubSComplex_IteratorProvider.hpp
+build/obj/src/CrHomS.o: inc/CubSComplex_Iterators.hpp
+build/obj/src/CrHomS.o: inc/CubSComplex_ColoredIterators.hpp
+build/obj/src/CrHomS.o: inc/CubSComplex_Numerators.hpp inc/SComplexAlgs.hpp
+build/obj/src/CrHomS.o: inc/SComplexAlgs_Coreduction.hpp
+build/obj/src/CrHomS.o: inc/SComplexAlgs_DefaultReduceStrategy.hpp
+build/obj/src/CrHomS.o: inc/SComplexAlgs_Shave.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex_Cell.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex_IteratorProvider.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex_Iterators.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex_ColoredIterators.hpp
+build/obj/src/CubSComplex_Cell.o: inc/CubSComplex_Numerators.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex_Cell.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex_IteratorProvider.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex_Iterators.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex_ColoredIterators.hpp
+build/obj/test/unit/CubSComplexIteratorsTest.o: inc/CubSComplex_Numerators.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex_Cell.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex_IteratorProvider.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex_Iterators.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex_ColoredIterators.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/CubSComplex_Numerators.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/SComplexAlgs.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/SComplexAlgs_Coreduction.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/SComplexAlgs_DefaultReduceStrategy.hpp
+build/obj/test/unit/CubSComplexReductionTest.o: inc/SComplexAlgs_Shave.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex_Cell.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex_IteratorProvider.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex_Iterators.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex_ColoredIterators.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/CubSComplex_Numerators.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/SComplexAlgs.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/SComplexAlgs_Coreduction.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/SComplexAlgs_DefaultReduceStrategy.hpp
+build/obj/test/performance/CubSComplexCoreductionPerformance.o: inc/SComplexAlgs_Shave.hpp

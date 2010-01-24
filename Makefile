@@ -110,8 +110,9 @@ coverage: init $(BINS_DIR)/$(TEST_APP_NAME)
 	@lcov -o $(TEST_LCOV_OUTPUT) -b ./ -c -i -d $(OBJS_DIR) > /dev/null
 	@echo "Run tests"
 	@LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(BINS_DIR)/$(TEST_APP_NAME) > /dev/null
+	@lcov -o $(TEST_LCOV_OUTPUT) -d $(OBJS_DIR) -c -b ./ > /dev/null
+	@lcov -o $(TEST_LCOV_OUTPUT).tmp -d $(OBJS_DIR) -e $(TEST_LCOV_OUTPUT) $(addprefix $(PWD)/, $(ALL_SRCS)) > /dev/null
 	@echo "Generate report"
-	@lcov -o $(TEST_LCOV_OUTPUT).tmp -e $(TEST_LCOV_OUTPUT) $(addprefix $(PWD)/, $(ALL_SRCS)) > /dev/null
 	@genhtml -o $(LCOV_DIR) $(TEST_LCOV_OUTPUT).tmp > /dev/null
 
 

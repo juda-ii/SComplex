@@ -73,7 +73,7 @@ COMP_FLAGS= $(DEBUG) $(WARNINGS) $(SOURCE_STANDARD) $(OPT_FLAGS) $(INC_PATHS) $(
 coverage: OPT_FLAGS=
 coverage: DEBUG:=$(DEBUG) -fprofile-arcs -ftest-coverage
 
-.PHONY: init depend clean clean-obj libs apps all
+.PHONY: init depend clean clean-obj libs apps all compile
 
 
 $(BINS_DIR):
@@ -96,13 +96,15 @@ $(CCCC_DIR):
 $(LCOV_DIR):
 	$(MKDIR) $(LCOV_DIR)
 
-all: init libs apps
-
 init: $(BINS_DIR) $(LIBS_DIR) $(OBJS_DIR) $(RUN_DIR) $(CCCC_DIR) $(LCOV_DIR)
+
+all: init libs apps test
 
 libs: init $(LIBS_DIR)/$(LIB_NAME)
 
 apps: init $(BINS_DIR)/$(APP_NAME)
+
+compile: init $(ALL_OBJS)
 
 test: init $(BINS_DIR)/$(TEST_APP_NAME)
 	@time (LD_LIBRARY_PATH=$(BOOST_HOME)/lib $(PWD)/$(BINS_DIR)/$(TEST_APP_NAME) --output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL) --report_level=$(TEST_REPORT_LEVEL))

@@ -45,16 +45,16 @@ APP_LIBS = -lcapd -lSComplex
 TEST_APP_NAME=CubSComplexTest
 TEST_SRCS = \
 	$(TESTS_DIR)/CubSComplexTestMain.cpp \
-	$(TESTS_DIR)/CubSComplexIteratorsTest.cpp
-#	$(TESTS_DIR)/CubSComplexReductionTest.cpp
+	$(TESTS_DIR)/CubSComplexIteratorsTest.cpp \
+	$(TESTS_DIR)/CubSComplexReductionTest.cpp
 
 
 TEST_OBJS = $(TEST_SRCS:%.cpp=$(OBJS_DIR)/%.o)
-
 TEST_LIBS = $(APP_LIBS) -lboost_unit_test_framework
 
 
 ALL_SRCS = $(LIB_SRCS) $(APP_SRCS) $(TEST_SRCS) $(H_SRCS)
+ALL_OBJS = $(LIB_OBJS) $(APP_OBJS) $(TEST_OBJS)
 
 MKDIR=mkdir
 CC=g++
@@ -73,7 +73,7 @@ COMP_FLAGS= $(DEBUG) $(WARNINGS) $(SOURCE_STANDARD) $(OPT_FLAGS) $(INC_PATHS) $(
 coverage: OPT_FLAGS=
 coverage: DEBUG:=$(DEBUG) -fprofile-arcs -ftest-coverage
 
-.PHONY: init depend clean libs apps all
+.PHONY: init depend clean clean-obj libs apps all
 
 
 $(BINS_DIR):
@@ -141,8 +141,10 @@ $(BINS_DIR)/$(TEST_APP_NAME): init libs $(TEST_OBJS)
 	@echo $(TEST_APP_NAME)
 	@$(CC) $(COMP_FLAGS) -o $(BINS_DIR)/$(TEST_APP_NAME) $(LIB_PATHS) $(TEST_OBJS) $(TEST_LIBS) 
 
+clean-obj:
+	$(RM) $(ALL_OBJS)
 
-clean:
+clean: clean-obj
 	$(RM) -r $(BUILD_DIR)/*
 
 depend: $(APP_SRCS) $(LIB_SRCS)  $(TEST_SRCS)

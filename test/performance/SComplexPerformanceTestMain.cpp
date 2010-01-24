@@ -6,7 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <boost/test/results_reporter.hpp>
+#include "test/inc/LogRedirector.h"
+
+static LogRedirector logRedirector(getenv("TEST_LOG_OUTPUT"));
 
 
 extern void reduction_test();

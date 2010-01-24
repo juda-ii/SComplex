@@ -14,7 +14,6 @@ PERFORMANCE_TEST_DIR=$(TEST_DIR)/performance
 APP_NAME=CrHomS
 LIB_NAME=libSComplex.a
 
-UNIT_TEST_RESULT_XML=$(RUN_DIR)/test_result.xml
 CCCC_DIR=$(RUN_DIR)/cccc
 CPPCHECK_OUTPUT=$(RUN_DIR)/cppcheck.xml
 UNIT_TEST_LCOV_OUTPUT=$(LCOV_DIR)/test.info
@@ -29,7 +28,7 @@ TEST_APP_ARGS=--output_format=$(TEST_OUTPUT_FORMAT) --log_level=$(TEST_LOG_LEVEL
 BOOST_HOME=/home/juda/local/apps/boost-1-41-0
 CAPD_HOME=/home/juda/workspace/capd
 
-LOCAL_INC_PATHS= -I$(INCS_DIR)  
+LOCAL_INC_PATHS= -I$(INCS_DIR) -I.
 INC_PATHS = $(LOCAL_INC_PATHS) -isystem$(CAPD_HOME)/include -isystem$(BOOST_HOME)/include
 LIB_PATHS = -L$(LIBS_DIR) -L$(CAPD_HOME)/lib -L$(BOOST_HOME)/lib
 

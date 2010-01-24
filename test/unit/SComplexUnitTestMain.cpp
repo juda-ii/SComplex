@@ -8,22 +8,8 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/results_reporter.hpp>
-
-struct LogRedirector
-{
-    std::ofstream out;
-
-  LogRedirector(const char* filename)
-  {
-	 if (filename) {
-		out.open(filename);
-		assert( out.is_open() );
-		boost::unit_test::unit_test_log.set_stream(out);
-    }
-  }
-  
-};
+#include "test/inc/LogRedirector.h"
 
 static LogRedirector logRedirector(getenv("TEST_LOG_OUTPUT"));
+
+

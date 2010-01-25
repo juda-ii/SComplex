@@ -1,4 +1,8 @@
 BUILD_DIR=build
+
+
+XXX=xxx
+
 BINS_DIR=$(BUILD_DIR)/bin
 LIBS_DIR=$(BUILD_DIR)/lib
 OBJS_DIR=$(BUILD_DIR)/obj

@@ -4,6 +4,7 @@ LIBS_DIR=$(BUILD_DIR)/lib
 OBJS_DIR=$(BUILD_DIR)/obj
 RUN_DIR=$(BUILD_DIR)/run
 
+YYY=yyy
 
 INCS_DIR=inc
 SRCS_DIR=src
